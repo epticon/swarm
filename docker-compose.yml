@@ -1,0 +1,35 @@
+version: "3"
+
+services:
+  db:
+    image: postgres:9.6-alpine
+    env_file:
+      - .env
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - pgdata:/var/lib/postgresql/data/pgdata
+    ports:
+      - "4432:5432"
+
+  telemetary:
+    build: ./telemetary
+    depends_on:
+      - db
+    volumes:
+      - ./telemetary:/bin
+    ports:
+      - "8000:8080"
+
+  videostream:
+    build: ./videostream
+    volumes:
+      - ./videostream:/videostream
+      - ./certs:/opt/certs
+    ports:
+      - 1935:1935 # maps port to nginx rtmp server
+      - 8080:80
+      # - 8443:443 # enable for SSL / https
+
+volumes:
+  pgdata: {}
