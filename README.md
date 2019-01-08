@@ -1,4 +1,4 @@
-# Swarm Alligator Remote Server
+# Alligator Swarm Remote Server
 
 Comprises of:
 
