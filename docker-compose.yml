@@ -25,7 +25,7 @@ services:
     build: ./videostream
     volumes:
       - ./videostream:/videostream
-      - ./certs:/opt/certs
+      # - ./certs:/opt/certs
     ports:
       - 1935:1935 # maps port to nginx rtmp server
       - 8080:80
