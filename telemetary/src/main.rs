@@ -12,16 +12,20 @@ fn swarm_index_route(req: &HttpRequest<AlligatorServerState>) -> Result<HttpResp
 }
 
 fn main() {
+    // Set enviroment variables.
     env_logger::init();
     let server_address = &env("APP_URL").unwrap();
     let server_port = &env("PORT").unwrap();
 
+    // Setup arbiter.
     let sys = System::new("Alligator Swarm");
-
     let swarm_server = Arbiter::start(|_| Swarm::default());
+
+    // Spin up alligator server.
     HttpServer::new(move || {
         let state = AlligatorServerState {
             address: swarm_server.clone(),
+            router: router::Router::default(),
         };
 
         App::with_state(state).resource("/ws/", |resource| resource.route().f(swarm_index_route))
@@ -30,6 +34,7 @@ fn main() {
     .unwrap()
     .start();
 
+    // Get started.
     println!("Server started at {}:{}", server_address, server_port);
 
     sys.run();
