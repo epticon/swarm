@@ -1,14 +1,16 @@
+pub(crate) use self::message::{Connect, Disconnect};
+use self::nodes::RootNode;
 use actix::prelude::{Actor, Context, Message as ActixMessage};
 
-mod connect;
-mod disconnect;
-pub(crate) use self::connect::*;
-pub(crate) use self::disconnect::*;
+mod message;
+mod nodes;
 
 #[derive(ActixMessage)]
 pub struct Message(pub String);
 
-pub(crate) struct Swarm;
+pub(crate) struct Swarm {
+    network: RootNode,
+}
 
 impl Actor for Swarm {
     type Context = Context<Self>;
@@ -16,6 +18,8 @@ impl Actor for Swarm {
 
 impl Default for Swarm {
     fn default() -> Self {
-        Swarm
+        Swarm {
+            network: RootNode::default(),
+        }
     }
 }

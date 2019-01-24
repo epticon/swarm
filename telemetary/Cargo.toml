@@ -21,3 +21,4 @@ rand = "0.6.4"
 dotenv_codegen = "0.11.0"
 serde_derive = "1.0.85"
 mashup = "0.1.9"
+multi-map = {git ="https://github.com/vbrandl/multi-map.git", rev="12510ab"}
