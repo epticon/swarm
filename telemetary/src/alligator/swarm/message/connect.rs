@@ -1,12 +1,13 @@
 use crate::alligator::server::ClientType;
-use crate::alligator::swarm::{Message, Swarm};
+use crate::alligator::swarm::{Drone, DroneConfig, Message, Swarm};
 use actix::prelude::{Context, Handler, Message as ActixMessage, Recipient};
+use rand::Rng;
 
 #[derive(ActixMessage)]
 #[rtype(usize)]
 pub(crate) struct Connect {
-    pub client_id: String,
-    pub client_type: ClientType,
+    // pub client_id: String,
+    pub client: ClientType,
     pub address: Recipient<Message>,
 }
 
@@ -19,6 +20,27 @@ impl Handler<Connect> for Swarm {
         println!("Someone just connected");
 
         // Add the client recient address from the respective swarm node.
-        4
+        // let session_id = self.range.gen::<usize>();
+
+        match msg.client {
+            ClientType::Drone {
+                hash,
+                owner_hash,
+                division_name,
+            } => {
+                let config = DroneConfig {
+                    address: msg.address,
+                    owner_hash: owner_hash,
+                    hash: hash,
+                };
+
+                self.network
+                    .insert_drone(&division_name, Drone::new(&config));
+            }
+
+            ClientType::Pilot { hash } => {}
+        };
+        // session_id
+        3
     }
 }

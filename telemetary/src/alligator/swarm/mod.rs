@@ -1,7 +1,9 @@
+pub(crate) use self::devices::drone::{Drone, DroneConfig};
 pub(crate) use self::message::{Connect, Disconnect};
 use self::nodes::RootNode;
 use actix::prelude::{Actor, Context, Message as ActixMessage};
 
+mod devices;
 mod message;
 mod nodes;
 

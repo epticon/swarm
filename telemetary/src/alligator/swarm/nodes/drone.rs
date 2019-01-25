@@ -1,20 +1,32 @@
-use actix::Recipient;
+use crate::alligator::swarm::devices::{drone::Drone, DeviceTrait};
 use multi_map::MultiMap;
-
-use crate::alligator::swarm::Message;
+use rand::Rng;
 
 pub(crate) struct DroneNode {
-    inner: MultiMap<String, String, Drone>, // <division_name, hash, drone>
+    inner: MultiMap<usize, String, Drone>, // <session_id, hash, drone>
+    range: rand::rngs::ThreadRng,
 }
 
-pub(crate) struct Drone {
-    address: Recipient<Message>,
+impl DroneNode {
+    pub fn new() -> Self {
+        DroneNode {
+            range: rand::thread_rng(),
+            inner: MultiMap::new(),
+        }
+    }
+
+    pub fn insert(&mut self, drone: Drone) {
+        let session_id = self.range.gen::<usize>();
+        self.inner
+            .insert(session_id, drone.hash().to_string(), drone);
+    }
 }
 
 impl Default for DroneNode {
     fn default() -> Self {
         DroneNode {
             inner: MultiMap::new(),
+            range: rand::thread_rng(),
         }
     }
 }

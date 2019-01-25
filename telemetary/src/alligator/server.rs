@@ -145,7 +145,7 @@ impl Actor for AlligatorServer {
     // A collection of nodes is what forms the swarm.
     fn started(&mut self, ctx: &mut Self::Context) {
         // Identify if the client connecting is a drone or a pilot.
-        if let Some(client_type) = self.client_type(ctx) {
+        if let Some(client) = self.client_type(ctx) {
             self.start_heartbeat(ctx);
 
             // Todo: Get the pilot client id from the database in production version.
@@ -156,8 +156,8 @@ impl Actor for AlligatorServer {
             ctx.state()
                 .address
                 .send(Connect {
-                    client_id: FAKE_PILOT_CLIENT_HASH.to_string(),
-                    client_type,
+                    // client_id: FAKE_PILOT_CLIENT_HASH.to_string(),
+                    client,
                     address: addr.recipient(),
                 })
                 .into_actor(self)
