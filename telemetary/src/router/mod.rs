@@ -31,7 +31,7 @@ where
         }
     }
 
-    fn add_route(&mut self, path: &str, callback: Callback<T>) -> &Self {
+    fn _add_route(&mut self, path: &str, callback: Callback<T>) -> &Self {
         self.inner.insert(path.to_string(), callback);
         self
     }

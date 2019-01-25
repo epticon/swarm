@@ -1,5 +1,4 @@
-use crate::alligator::swarm::devices::DeviceTrait;
-use crate::alligator::swarm::Message;
+use crate::alligator::swarm::devices::{ClientTrait, DeviceTrait, Message};
 use actix::Recipient;
 
 #[derive(Clone)]
@@ -9,27 +8,11 @@ pub(crate) struct Drone {
     address: Recipient<Message>,
 }
 
-impl<'a> DeviceTrait<'a> for Drone {
-    fn address(&'a self) -> &'a Recipient<Message> {
-        &self.address
-    }
-
-    fn owner_hash(&'a self) -> &'a str {
-        &self.owner_hash
-    }
-
-    fn hash(&'a self) -> &'a str {
-        &self.hash
-    }
-}
-
 pub(crate) struct DroneConfig {
     pub hash: String,
     pub owner_hash: String,
     pub address: Recipient<Message>,
 }
-
-// address: Recipient<Message>, owner_hash: &'a str, hash: &'a str
 
 impl<'a> Drone {
     pub fn new(config: &'a DroneConfig) -> Self {
@@ -38,5 +21,21 @@ impl<'a> Drone {
             owner_hash: config.owner_hash.to_string(),
             hash: config.hash.to_string(),
         }
+    }
+}
+
+impl<'a> DeviceTrait<'a> for Drone {
+    fn owner_hash(&'a self) -> &'a str {
+        &self.owner_hash
+    }
+}
+
+impl<'a> ClientTrait<'a> for Drone {
+    fn address(&'a self) -> &'a Recipient<Message> {
+        &self.address
+    }
+
+    fn hash(&'a self) -> &'a str {
+        &self.hash
     }
 }

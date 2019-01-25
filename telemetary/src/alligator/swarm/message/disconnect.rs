@@ -12,9 +12,9 @@ pub(crate) struct Disconnect {
 impl Handler<Disconnect> for Swarm {
     type Result = ();
 
-    fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) {
+    fn handle(&mut self, _msg: Disconnect, _: &mut Context<Self>) {
         // Improve error message by specifying the type of client that disconnected.
-        println!("CLient disconnected");
+        println!("Client disconnected");
 
         // Remove the client recient address from the respective swarm node.
     }

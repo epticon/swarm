@@ -1,9 +1,13 @@
-use crate::alligator::swarm::devices::{drone::Drone, DeviceTrait};
+use crate::alligator::swarm::{
+    devices::drone::Drone,
+    nodes::{HashString, Session},
+    ClientTrait,
+};
 use multi_map::MultiMap;
 use rand::Rng;
 
 pub(crate) struct DroneNode {
-    inner: MultiMap<usize, String, Drone>, // <session_id, hash, drone>
+    inner: MultiMap<Session, HashString, Drone>, // <session_id, hash, drone>
     range: rand::rngs::ThreadRng,
 }
 
@@ -15,10 +19,12 @@ impl DroneNode {
         }
     }
 
-    pub fn insert(&mut self, drone: Drone) {
-        let session_id = self.range.gen::<usize>();
+    pub fn insert(&mut self, drone: Drone) -> Session {
+        let session_id = self.range.gen::<Session>();
         self.inner
             .insert(session_id, drone.hash().to_string(), drone);
+
+        session_id
     }
 }
 

@@ -1,3 +1,4 @@
+use crate::alligator::swarm::Pilot;
 use multi_map::MultiMap;
 use std::{
     collections::{
@@ -13,6 +14,9 @@ mod pilot;
 pub(crate) use self::drone::DroneNode;
 pub(crate) use self::pilot::PilotNode;
 use crate::alligator::swarm::Drone;
+
+pub(crate) type HashString = String;
+pub(crate) type Session = usize;
 
 // Note:
 // Currently, Pilots in a RootNode are priviledged to send command to all
@@ -42,24 +46,27 @@ fn hash_string(string: &str) -> String {
 }
 
 impl RootNode {
-    pub(crate) fn insert_drone<'a>(&mut self, division_name: &'a str, drone: Drone) {
+    pub fn insert_drone<'a>(&mut self, division_name: &'a str, drone: Drone) -> usize {
         match self
             .drones
             .entry(hash_string(&division_name.to_lowercase()))
         {
             Entry::Vacant(node) => {
                 let mut drone_node = DroneNode::new();
-                drone_node.insert(drone);
+                let session_id = drone_node.insert(drone);
 
                 // Inserts a new drone node with the division
                 // name that was checked for.
                 node.insert(drone_node);
+                session_id
             }
 
-            Entry::Occupied(mut value) => {
-                value.get_mut().insert(drone);
-            }
-        };
+            Entry::Occupied(mut value) => value.get_mut().insert(drone),
+        }
+    }
+
+    pub fn insert_pilot(&mut self, pilot: Pilot) -> usize {
+        self.pilots.insert(pilot)
     }
 }
 
