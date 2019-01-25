@@ -1,4 +1,4 @@
-use crate::alligator::swarm::Pilot;
+use crate::alligator::swarm::{uavs::Drone, users::Pilot};
 use multi_map::MultiMap;
 use std::{
     collections::{
@@ -13,7 +13,6 @@ mod pilot;
 
 pub(crate) use self::drone::DroneNode;
 pub(crate) use self::pilot::PilotNode;
-use crate::alligator::swarm::Drone;
 
 pub(crate) type HashString = String;
 pub(crate) type Session = usize;

@@ -1,4 +1,4 @@
-use crate::alligator::swarm::devices::{ClientTrait, DeviceTrait, Message};
+use crate::alligator::swarm::uavs::{ClientTrait, DeviceTrait, Message};
 use actix::Recipient;
 
 #[derive(Clone)]

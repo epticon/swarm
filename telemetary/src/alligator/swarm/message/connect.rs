@@ -1,5 +1,9 @@
 use crate::alligator::server::ClientType;
-use crate::alligator::swarm::{Drone, DroneConfig, Message, Pilot, PilotConfig, Swarm};
+use crate::alligator::swarm::{
+    uavs::{Drone, DroneConfig},
+    users::{Pilot, PilotConfig},
+    Message, Swarm,
+};
 use actix::prelude::{Context, Handler, Message as ActixMessage, Recipient};
 
 #[derive(ActixMessage)]

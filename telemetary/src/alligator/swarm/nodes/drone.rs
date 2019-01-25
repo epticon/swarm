@@ -1,5 +1,5 @@
 use crate::alligator::swarm::{
-    devices::drone::Drone,
+    uavs::Drone,
     nodes::{HashString, Session},
     ClientTrait,
 };

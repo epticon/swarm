@@ -1,6 +1,7 @@
 use crate::alligator::swarm::{
+    users::Pilot,
     nodes::{ClientNodeTrait, HashString, Session},
-    ClientTrait, Pilot,
+    ClientTrait,
 };
 use multi_map::MultiMap;
 use rand::Rng;
