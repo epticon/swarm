@@ -2,7 +2,6 @@ pub(crate) use self::clients::*;
 pub(crate) use self::message::{Connect, Disconnect};
 use self::nodes::RootNode;
 use actix::prelude::{Actor, Context, Message as ActixMessage};
-use actix::Recipient;
 
 mod clients;
 mod message;

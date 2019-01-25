@@ -1,8 +1,11 @@
-use crate::alligator::server::ClientType;
-use crate::alligator::swarm::{
-    uavs::{Drone, DroneConfig},
-    users::{Pilot, PilotConfig},
-    Message, Swarm,
+use crate::alligator::{
+    self,
+    server::ClientType,
+    swarm::{
+        uavs::{Drone, DroneConfig},
+        users::{Pilot, PilotConfig},
+        Message, Swarm,
+    },
 };
 use actix::prelude::{Context, Handler, Message as ActixMessage, Recipient};
 
@@ -18,8 +21,7 @@ impl Handler<Connect> for Swarm {
     type Result = usize;
 
     fn handle(&mut self, msg: Connect, _: &mut Context<Self>) -> Self::Result {
-        // Improve error message by specifying the type of client that disconnected.
-        println!("Someone just connected");
+        alligator::log(&format!("{:?} just connected", msg.client));
 
         match msg.client {
             ClientType::Drone {
