@@ -1,6 +1,6 @@
 use crate::alligator::swarm::{
-    users::Pilot,
     nodes::{ClientNodeTrait, HashString, Session},
+    users::Pilot,
     ClientTrait,
 };
 use multi_map::MultiMap;
@@ -25,8 +25,20 @@ impl PilotNode {
         session_id
     }
 
+    pub fn remove(&mut self, session_id: Session) -> Option<Pilot> {
+        self.inner.remove(&session_id)
+    }
+
+    pub fn _remove_by_hash(&mut self, hash: &str) -> Option<Pilot> {
+        self.inner.remove_alt(hash)
+    }
+
     pub fn _get_pilot(&self, session_id: usize) -> Option<&Pilot> {
         self.get(session_id, &self.inner)
+    }
+
+    pub fn _get_pilot_by_hash(&self, hash: HashString) -> Option<&Pilot> {
+        self.inner.get_alt(&hash)
     }
 
     pub fn _pilots(&self) -> Vec<&Pilot> {

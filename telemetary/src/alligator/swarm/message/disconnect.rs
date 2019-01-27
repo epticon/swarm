@@ -14,6 +14,15 @@ impl Handler<Disconnect> for Swarm {
     fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) {
         alligator::log(&format!("{:?} just disconnected", msg));
 
-        // Remove the client recient address from the respective swarm node.
+        // Remove the client recipient address from the respective swarm node.
+        match msg.client {
+            ClientType::Drone { division_name, .. } => {
+                self.network.remove_drone(&division_name, msg.session_id);
+            }
+
+            ClientType::Pilot { .. } => {
+                self.network.remove_pilot(msg.session_id);
+            }
+        };
     }
 }

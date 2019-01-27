@@ -67,6 +67,14 @@ impl RootNode {
     pub fn insert_pilot(&mut self, pilot: Pilot) -> usize {
         self.pilots.insert(pilot)
     }
+
+    pub fn remove_drone(&mut self, division_name: &str, session_id: Session) -> Option<Drone> {
+        self.drones.remove(division_name)?.remove(session_id)
+    }
+
+    pub fn remove_pilot(&mut self, session_id: Session) -> Option<Pilot> {
+        self.pilots.remove(session_id)
+    }
 }
 
 pub(crate) trait ClientNodeTrait {

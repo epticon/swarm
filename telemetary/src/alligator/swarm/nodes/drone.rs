@@ -1,6 +1,6 @@
 use crate::alligator::swarm::{
-    uavs::Drone,
     nodes::{HashString, Session},
+    uavs::Drone,
     ClientTrait,
 };
 use multi_map::MultiMap;
@@ -25,6 +25,14 @@ impl DroneNode {
             .insert(session_id, drone.hash().to_string(), drone);
 
         session_id
+    }
+
+    pub fn remove(&mut self, session_id: Session) -> Option<Drone> {
+        self.inner.remove(&session_id)
+    }
+
+    pub fn _remove_by_hash(&mut self, hash: &str) -> Option<Drone> {
+        self.inner.remove_alt(hash)
     }
 }
 
