@@ -25,7 +25,7 @@ fn main() {
     HttpServer::new(move || {
         let state = AlligatorServerState {
             address: swarm_server.clone(),
-            router: router::Router::default(),
+            router: router::GetRoutes(),
         };
 
         App::with_state(state).resource("/ws/", |resource| resource.route().f(swarm_index_route))

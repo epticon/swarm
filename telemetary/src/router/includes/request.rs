@@ -1,9 +1,10 @@
 use serde_derive::{Deserialize, Serialize};
+use serde_json::Value;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct RequestJson {
     path: String,
-    command: String,
+    data: Value,
 }
 
 impl RequestJson {

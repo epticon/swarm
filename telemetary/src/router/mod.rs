@@ -1,8 +1,11 @@
 use serde::Serialize;
 use std::collections::HashMap;
 
+mod app;
 mod errors;
 mod includes;
+
+pub(crate) use self::app::index as GetRoutes;
 pub(crate) use self::errors::RouterError;
 pub(crate) use self::includes::*;
 
@@ -31,7 +34,7 @@ where
         }
     }
 
-    fn _add_route(&mut self, path: &str, callback: Callback<T>) -> &Self {
+    fn add_route(&mut self, path: &str, callback: Callback<T>) -> &Self {
         self.inner.insert(path.to_string(), callback);
         self
     }
