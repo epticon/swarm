@@ -1,3 +1,5 @@
+use crate::alligator::server::{AlligatorServer, AlligatorServerState};
+use actix_web::ws::WebsocketContext;
 use serde::Serialize;
 use std::collections::HashMap;
 
@@ -9,7 +11,10 @@ pub(crate) use self::app::index as GetRoutes;
 pub(crate) use self::errors::RouterError;
 pub(crate) use self::includes::*;
 
-type Callback<T> = fn(&RequestJson) -> Result<T, RouterError>;
+type Callback<T> = fn(
+    &RequestJson,
+    &WebsocketContext<AlligatorServer, AlligatorServerState>,
+) -> Result<T, RouterError>;
 
 pub(crate) struct Router<T: Serialize> {
     inner: HashMap<String, Callback<T>>,
@@ -30,7 +35,7 @@ where
     pub(crate) fn match_route(&self, path: &str) -> Callback<T> {
         match self.inner.get(path) {
             Some(cb) => *cb,
-            None => |_| Err(RouterError::InvalidRoute),
+            None => |_, _| Err(RouterError::InvalidRoute),
         }
     }
 

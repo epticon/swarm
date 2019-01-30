@@ -197,7 +197,7 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for AlligatorServer {
                     Ok(json) => {
                         let callback = ctx.state().router.match_route(&json.path());
 
-                        match callback(&json) {
+                        match callback(&json, ctx) {
                             Ok(response) => ctx.text(response),
                             Err(err) => ctx.text(err),
                         }
