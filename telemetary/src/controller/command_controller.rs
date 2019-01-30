@@ -1,15 +1,15 @@
-use crate::alligator::server::{AlligatorServer, AlligatorServerState};
-use crate::router::{RequestJson, ResponseJson, RouterError};
-use actix_web::ws::WebsocketContext;
+use crate::router::{ResponseJson, RouterError};
+use serde_derive::Deserialize;
+use serde_json::{from_value, Value};
 
-// struct Command {
-//     client:
-// }
+#[derive(Deserialize)]
+struct Command {
+    // client:
+}
 
-pub(crate) fn send_command(
-    _req: &RequestJson,
-    _ctx: &WebsocketContext<AlligatorServer, AlligatorServerState>,
-) -> Result<ResponseJson, RouterError> {
+pub(crate) fn send_command<T>(req: Value, _ctx: &T) -> Result<ResponseJson, RouterError> {
+    let command = from_value::<Command>(req);
+
     Ok(ResponseJson {
         message: "Success".to_string(),
     })

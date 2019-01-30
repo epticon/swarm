@@ -1,27 +1,20 @@
-use crate::alligator::swarm::{Connect, Disconnect, Message, Swarm};
+use crate::alligator::{
+    constants::{
+        CLIENT_TYPE_HEADER_KEY, FAKE_PILOT_CLIENT_HASH, HEARTBEAT_INTERVAL, MAX_CLIENT_TIMEOUT,
+    },
+    swarm::{Connect, Disconnect, Message, Swarm},
+};
 use crate::router::{RequestJson, ResponseJson, Router, RouterError};
-use actix::fut;
-use actix::prelude::{
-    Actor, ActorContext, ActorFuture, Addr, AsyncContext, ContextFutureSpawner, Handler,
-    StreamHandler, WrapFuture,
+use actix::{
+    fut,
+    prelude::{
+        Actor, ActorContext, ActorFuture, Addr, AsyncContext, ContextFutureSpawner, Handler,
+        StreamHandler, WrapFuture,
+    },
 };
 use actix_web::ws;
 use rand::Rng;
-use serde_json::Result as JsonResult;
-use std::time::{Duration, Instant};
-
-// Header key that signifies the type of the client making a connection to
-// the alligator server. The supported types are `Pilot` and `Drone`.
-const CLIENT_TYPE_HEADER_KEY: &str = "Alligator-Client-Type";
-
-// Maximum time of inactivity before a client response reports a timeout.
-const MAX_CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
-
-// How often are heartbeat pings sent to client.
-const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(4);
-
-// Todo: Remove this and replace with hash retrieved from database.
-const FAKE_PILOT_CLIENT_HASH: &str = "23hbch2r2jhdb2hjfb2j3hb2jlfhbjfbh2jfb2jfhbjrbjh1fb";
+use std::time::Instant;
 
 #[derive(Debug)]
 pub(crate) enum ClientType {
@@ -39,7 +32,7 @@ pub(crate) enum ClientType {
 
 pub(crate) struct AlligatorServerState {
     pub address: Addr<Swarm>,
-    pub router: Router<ResponseJson>,
+    pub router: Router<ResponseJson, ws::WebsocketContext<AlligatorServer, Self>>,
 }
 
 pub(crate) struct AlligatorServer {
@@ -62,10 +55,13 @@ impl Default for AlligatorServer {
 impl AlligatorServer {
     // Starts the process of heartbeat. The heartbeat  is simply a helper function
     // that pings the pilot or drone clients connected.
-    fn start_heartbeat(&self, ctx: &mut ws::WebsocketContext<Self, AlligatorServerState>) {
+    fn start_heartbeat(&self, ctx: &mut <AlligatorServer as Actor>::Context) {
         ctx.run_interval(HEARTBEAT_INTERVAL, |act, ctx| {
             if Instant::now().duration_since(act.last_heartbeat_time) > MAX_CLIENT_TIMEOUT {
-                println!("Disconnecting client because heartbeat failed.");
+                println!(
+                    "Disconnecting {:?} because heartbeat failed.",
+                    &act.client_type
+                );
 
                 let client_type = &mut act.client_type;
 
@@ -90,10 +86,7 @@ impl AlligatorServer {
     }
 
     // Identify the client type of the connection, i.e. if it is a drone or a pilot.
-    fn client_type(
-        &self,
-        ctx: &mut ws::WebsocketContext<Self, AlligatorServerState>,
-    ) -> Option<ClientType> {
+    fn client_type(&self, ctx: &mut <AlligatorServer as Actor>::Context) -> Option<ClientType> {
         ctx.request()
             .headers()
             .get(CLIENT_TYPE_HEADER_KEY)
@@ -190,14 +183,14 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for AlligatorServer {
             }
 
             ws::Message::Text(msg) => {
-                let request: JsonResult<RequestJson> = serde_json::from_str(&msg);
+                let request = serde_json::from_str::<RequestJson>(&msg);
 
                 match request {
                     // Valid json
-                    Ok(json) => {
+                    Ok(ref json) => {
                         let callback = ctx.state().router.match_route(&json.path());
 
-                        match callback(&json, ctx) {
+                        match callback(json.data().to_owned(), ctx) {
                             Ok(response) => ctx.text(response),
                             Err(err) => ctx.text(err),
                         }

@@ -11,4 +11,8 @@ impl RequestJson {
     pub(crate) fn path(&self) -> &str {
         &self.path
     }
+
+    pub(crate) fn data(&self) -> &Value {
+        &self.data
+    }
 }
