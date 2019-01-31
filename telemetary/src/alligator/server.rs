@@ -1,7 +1,6 @@
+use crate::alligator::utils;
 use crate::alligator::{
-    constants::{
-        CLIENT_TYPE_HEADER_KEY, FAKE_PILOT_CLIENT_HASH, HEARTBEAT_INTERVAL, MAX_CLIENT_TIMEOUT,
-    },
+    constants::{HEARTBEAT_INTERVAL, MAX_CLIENT_TIMEOUT},
     swarm::{Connect, Disconnect, Message, Swarm},
 };
 use crate::router::{RequestJson, ResponseJson, Router, RouterError};
@@ -13,7 +12,7 @@ use actix::{
     },
 };
 use actix_web::ws;
-use rand::Rng;
+
 use std::time::Instant;
 
 #[derive(Debug)]
@@ -32,7 +31,7 @@ pub(crate) enum ClientType {
 
 pub(crate) struct AlligatorServerState {
     pub address: Addr<Swarm>,
-    pub router: Router<ResponseJson, ws::WebsocketContext<AlligatorServer, Self>>,
+    pub router: Router<ResponseJson, ClientType, ws::WebsocketContext<AlligatorServer, Self>>,
 }
 
 pub(crate) struct AlligatorServer {
@@ -84,31 +83,6 @@ impl AlligatorServer {
             ctx.ping("");
         });
     }
-
-    // Identify the client type of the connection, i.e. if it is a drone or a pilot.
-    fn client_type(&self, ctx: &mut <AlligatorServer as Actor>::Context) -> Option<ClientType> {
-        ctx.request()
-            .headers()
-            .get(CLIENT_TYPE_HEADER_KEY)
-            .and_then(|value| match value.to_str().ok()?.to_lowercase().as_ref() {
-                "drone" => Some(ClientType::Drone {
-                    // Todo: Get owner hash from header and validate in the database.
-                    owner_hash: FAKE_PILOT_CLIENT_HASH.to_string(),
-
-                    // Todo: get this from the header in production.
-                    hash: rand::thread_rng().gen::<usize>().to_string(),
-
-                    // General is the default channel drone is connected to by default
-                    division_name: "General".to_string(),
-                }),
-
-                "pilot" => Some(ClientType::Pilot {
-                    hash: FAKE_PILOT_CLIENT_HASH.to_string(),
-                }),
-
-                _ => None,
-            })
-    }
 }
 
 impl Handler<Message> for AlligatorServer {
@@ -138,7 +112,7 @@ impl Actor for AlligatorServer {
     // A collection of nodes is what forms the swarm.
     fn started(&mut self, ctx: &mut Self::Context) {
         // Identify if the client connecting is a drone or a pilot.
-        if let Some(client) = self.client_type(ctx) {
+        if let Some(client) = utils::extract_client_type(ctx) {
             self.start_heartbeat(ctx);
 
             // Todo: Get the pilot client id from the database in production version.
@@ -190,7 +164,11 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for AlligatorServer {
                     Ok(ref json) => {
                         let callback = ctx.state().router.match_route(&json.path());
 
-                        match callback(json.data().to_owned(), ctx) {
+                        match callback(
+                            json.data().to_owned(),
+                            &self.client_type.as_ref().unwrap(),
+                            ctx,
+                        ) {
                             Ok(response) => ctx.text(response),
                             Err(err) => ctx.text(err),
                         }

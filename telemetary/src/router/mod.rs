@@ -10,13 +10,13 @@ pub(crate) use self::app::get_routes as GetRoutes;
 pub(crate) use self::errors::RouterError;
 pub(crate) use self::includes::*;
 
-type Callback<T, W> = fn(Value, &W) -> Result<T, RouterError>;
+type Callback<T, C, W> = fn(Value, &C, &W) -> Result<T, RouterError>;
 
-pub(crate) struct Router<T: Serialize, W> {
-    inner: HashMap<String, Callback<T, W>>,
+pub(crate) struct Router<T: Serialize, C, W> {
+    inner: HashMap<String, Callback<T, C, W>>,
 }
 
-impl<T, W> Default for Router<T, W>
+impl<T, C, W> Default for Router<T, C, W>
 where
     T: Serialize,
 {
@@ -27,18 +27,18 @@ where
     }
 }
 
-impl<T, W> Router<T, W>
+impl<T, C, W> Router<T, C, W>
 where
     T: Serialize,
 {
-    pub(crate) fn match_route(&self, path: &str) -> Callback<T, W> {
+    pub(crate) fn match_route(&self, path: &str) -> Callback<T, C, W> {
         match self.inner.get(path) {
             Some(cb) => *cb,
-            None => |_, _| Err(RouterError::InvalidRoute),
+            None => |_, _, _| Err(RouterError::InvalidRoute),
         }
     }
 
-    fn add_route(&mut self, path: &str, callback: Callback<T, W>) -> &Self {
+    fn add_route(&mut self, path: &str, callback: Callback<T, C, W>) -> &Self {
         self.inner.insert(path.to_string(), callback);
         self
     }
