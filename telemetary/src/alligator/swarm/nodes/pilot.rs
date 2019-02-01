@@ -41,7 +41,7 @@ impl PilotNode {
         self.inner.get_alt(&hash)
     }
 
-    pub fn _pilots(&self) -> Vec<&Pilot> {
+    pub fn pilots(&self) -> Vec<&Pilot> {
         self.get_all(&self.inner)
     }
 }

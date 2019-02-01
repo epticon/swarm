@@ -1,3 +1,4 @@
+use crate::alligator::swarm::nodes::ClientNodeTrait;
 use crate::alligator::swarm::{
     nodes::{HashString, Session},
     uavs::Drone,
@@ -9,6 +10,10 @@ use rand::Rng;
 pub(crate) struct DroneNode {
     inner: MultiMap<Session, HashString, Drone>, // <session_id, hash, drone>
     range: rand::rngs::ThreadRng,
+}
+
+impl ClientNodeTrait for DroneNode {
+    type Item = Drone;
 }
 
 impl DroneNode {
@@ -33,6 +38,14 @@ impl DroneNode {
 
     pub fn _remove_by_hash(&mut self, hash: &str) -> Option<Drone> {
         self.inner.remove_alt(hash)
+    }
+
+    pub fn drones(&self) -> &MultiMap<Session, HashString, Drone> {
+        &self.inner
+    }
+
+    pub fn _get_values(&self) -> Vec<&Drone> {
+        self.get_all(&self.inner)
     }
 }
 

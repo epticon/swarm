@@ -12,10 +12,11 @@ use actix::{
     },
 };
 use actix_web::ws;
-
+use actix_web::ws::WebsocketContext;
+use serde_derive::{Deserialize, Serialize};
 use std::time::Instant;
 
-#[derive(Debug)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub(crate) enum ClientType {
     // Pilot are owners of a swarm.
     Pilot {
@@ -31,12 +32,11 @@ pub(crate) enum ClientType {
 
 pub(crate) struct AlligatorServerState {
     pub address: Addr<Swarm>,
-    pub router: Router<ResponseJson, ClientType, ws::WebsocketContext<AlligatorServer, Self>>,
+    pub router: Router<ResponseJson, ClientType, WebsocketContext<AlligatorServer, Self>>,
 }
 
 pub(crate) struct AlligatorServer {
-    // Unique session id.
-    session_id: usize,
+    session_id: usize, // Unique session id.
     last_heartbeat_time: Instant,
     client_type: Option<ClientType>,
 }
@@ -62,15 +62,13 @@ impl AlligatorServer {
                     &act.client_type
                 );
 
-                let client_type = &mut act.client_type;
-
                 ctx.state().address.do_send(Disconnect {
                     session_id: act.session_id,
                     // Unwrapping is safe because no client can be created
                     // without a `client_type` with Some(_) containing all of the client information.
                     //
                     // `take()` replaces the client_type with a `None` type
-                    client: client_type.take().unwrap(),
+                    client: act.client_type.take().unwrap(),
                 });
 
                 // Stops the specified actor.
@@ -112,39 +110,40 @@ impl Actor for AlligatorServer {
     // A collection of nodes is what forms the swarm.
     fn started(&mut self, ctx: &mut Self::Context) {
         // Identify if the client connecting is a drone or a pilot.
-        if let Some(client) = utils::extract_client_type(ctx) {
-            self.start_heartbeat(ctx);
 
-            // Todo: Get the pilot client id from the database in production version.
-            // Pending that time, use the `FAKE_PILOT_CLIENT_HASH` value.
+        match utils::extract_client_type(ctx) {
+            Some(client) => {
+                self.start_heartbeat(ctx);
 
-            let addr = ctx.address();
+                ctx.state()
+                    .address
+                    .send(Connect {
+                        client: client.clone(), // look for an improvement
+                        address: ctx.address().recipient(),
+                    })
+                    .into_actor(self)
+                    .then(|res, act, ctx| {
+                        match res {
+                            Ok(res) => {
+                                act.session_id = res;
+                                act.client_type = Some(client);
+                            }
 
-            ctx.state()
-                .address
-                .send(Connect {
-                    // client_id: FAKE_PILOT_CLIENT_HASH.to_string(),
-                    client,
-                    address: addr.recipient(),
-                })
-                .into_actor(self)
-                .then(|res, act, ctx| {
-                    match res {
-                        Ok(res) => act.session_id = res,
-                        Err(err) => {
-                            println!("{}", err);
-                            ctx.stop();
+                            Err(err) => {
+                                println!("{}", err);
+                                ctx.stop();
+                            }
                         }
-                    }
 
-                    fut::ok(())
-                })
-                .wait(ctx);
-        } else {
-            ctx.close(Some(ws::CloseReason {
+                        fut::ok(())
+                    })
+                    .wait(ctx); // I'm not sure we should block the processing of events
+            }
+
+            None => ctx.close(Some(ws::CloseReason {
                 code: ws::CloseCode::Invalid,
                 description: Some("`Alligator-Client-Type` header value is missing.".to_string()),
-            }));
+            })),
         }
     }
 }

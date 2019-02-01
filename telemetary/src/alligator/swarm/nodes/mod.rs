@@ -45,6 +45,14 @@ fn hash_string(string: &str) -> String {
 }
 
 impl RootNode {
+    pub fn pilots(&self) -> Vec<&Pilot> {
+        self.pilots.pilots()
+    }
+
+    pub fn drones(&self) -> &HashMap<String, DroneNode> {
+        &self.drones
+    }
+
     pub fn insert_drone<'a>(&mut self, division_name: &'a str, drone: Drone) -> usize {
         match self
             .drones

@@ -1,3 +1,4 @@
+use crate::alligator::server::ClientType;
 use crate::router::ResponseJson;
 use serde_derive::{Deserialize, Serialize};
 
@@ -5,6 +6,8 @@ use serde_derive::{Deserialize, Serialize};
 pub(crate) enum RouterError {
     InvalidRoute,
     InvalidJson,
+    DroneDown { client: ClientType },
+    PilotDown { client: ClientType },
 }
 
 impl Into<ResponseJson> for RouterError {
@@ -15,6 +18,12 @@ impl Into<ResponseJson> for RouterError {
             },
             RouterError::InvalidJson => ResponseJson {
                 message: String::from("Invalid json specified"),
+            },
+            RouterError::DroneDown { .. } => ResponseJson {
+                message: format!("Drone: {:?} is down", self),
+            },
+            RouterError::PilotDown { .. } => ResponseJson {
+                message: format!("Pilot: {:?} is down", self),
             },
         }
     }

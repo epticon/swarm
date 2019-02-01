@@ -1,20 +1,59 @@
-use crate::router::{ResponseJson, RouterError};
+use crate::{
+    alligator::swarm::{SendCommandToDrones, SendCommandToPilots},
+    router::{ResponseJson, RouterError},
+    AlligatorServer, AlligatorServerState, ClientType,
+};
+use actix_web::ws::WebsocketContext;
 use serde_derive::Deserialize;
 use serde_json::{from_value, Value};
 
 #[derive(Copy, Clone, Deserialize)]
-struct Command {
-    // client:
+enum CommandType {
+    Land,
 }
 
-pub(crate) fn send_command<C, W>(
-    req: Value,
-    client: &C,
-    _ctx: &W,
-) -> Result<ResponseJson, RouterError> {
-    let command = from_value::<Command>(req);
+#[derive(Clone, Deserialize)]
+struct Command {
+    division_name: String,
+    message: String,
+}
 
-    Ok(ResponseJson {
-        message: "Success".to_string(),
-    })
+pub(crate) fn send_command(
+    req: Value,
+    client: &ClientType,
+    ctx: &WebsocketContext<AlligatorServer, AlligatorServerState>,
+) -> Result<ResponseJson, RouterError> {
+    let command = from_value::<Command>(req).unwrap();
+    let swarm_address = &ctx.state().address;
+
+    match client {
+        ClientType::Pilot { .. } => Ok(swarm_address
+            .try_send(SendCommandToDrones {
+                division_name: command.division_name.clone(),
+                message: command.message.clone(),
+                skip_id: None,
+            })
+            .map_err(|_| RouterError::PilotDown {
+                client: client.clone(), // improve this later (don't clone)
+            })
+            .and_then(|_| {
+                Ok(ResponseJson {
+                    message: "Message sent".to_string(),
+                })
+            })?),
+
+        ClientType::Drone { .. } => Ok(swarm_address
+            .try_send(SendCommandToPilots {
+                message: command.message.clone(),
+                skip_id: None,
+            })
+            .map_err(|_| RouterError::DroneDown {
+                client: client.clone(), // improve this later
+            })
+            .and_then(|_| {
+                Ok(ResponseJson {
+                    message: "Message sent".to_string(),
+                })
+            })?),
+    }
 }
