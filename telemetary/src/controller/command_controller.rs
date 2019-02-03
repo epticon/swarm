@@ -8,8 +8,10 @@ use serde_derive::Deserialize;
 use serde_json::{from_value, Value};
 
 #[derive(Copy, Clone, Deserialize)]
+#[allow(dead_code)]
 enum CommandType {
     Land,
+    Navigate { lat: i32, long: i32, altitude: i16 },
 }
 
 #[derive(Clone, Deserialize)]
@@ -33,7 +35,7 @@ pub(crate) fn send_command(
                 message: command.message.clone(),
                 skip_id: None,
             })
-            .map_err(|_| RouterError::PilotDown {
+            .map_err(|_| RouterError::DroneDown {
                 client: client.clone(), // improve this later (don't clone)
             })
             .and_then(|_| {
@@ -47,7 +49,7 @@ pub(crate) fn send_command(
                 message: command.message.clone(),
                 skip_id: None,
             })
-            .map_err(|_| RouterError::DroneDown {
+            .map_err(|_| RouterError::PilotDown {
                 client: client.clone(), // improve this later
             })
             .and_then(|_| {
