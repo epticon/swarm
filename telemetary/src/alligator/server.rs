@@ -112,7 +112,7 @@ impl Actor for AlligatorServer {
         // Identify if the client connecting is a drone or a pilot.
 
         match utils::extract_client_type(ctx) {
-            Some(client) => {
+            Ok(client) => {
                 self.start_heartbeat(ctx);
 
                 ctx.state()
@@ -140,9 +140,9 @@ impl Actor for AlligatorServer {
                     .wait(ctx); // I'm not sure we should block the processing of events
             }
 
-            None => ctx.close(Some(ws::CloseReason {
+            Err(err) => ctx.close(Some(ws::CloseReason {
                 code: ws::CloseCode::Invalid,
-                description: Some("`Alligator-Client-Type` header value is missing.".to_string()),
+                description: Some(err.to_string()),
             })),
         }
     }
