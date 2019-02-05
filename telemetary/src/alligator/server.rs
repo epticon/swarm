@@ -166,6 +166,8 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for AlligatorServer {
 
                         match callback(
                             json.data().cloned(),
+                            // Unwrapping client_type is safe, as clients cannot be
+                            // created without having a client_type.
                             &self.client_type.as_ref().unwrap(),
                             ctx,
                         ) {

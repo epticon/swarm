@@ -6,28 +6,33 @@ use serde_derive::{Deserialize, Serialize};
 pub(crate) enum RouterError {
     InvalidRoute,
     InvalidJson,
-    DataFieldMissing,
-    DroneDown { client: ClientType },
-    PilotDown { client: ClientType },
+    MissingField(String),
+    ClientDown(ClientType),
+}
+
+impl RouterError {
+    pub fn missing_data_field() -> Self {
+        RouterError::MissingField("data".to_string())
+    }
 }
 
 impl Into<ResponseJson> for RouterError {
     fn into(self) -> ResponseJson {
         match self {
             RouterError::InvalidRoute => ResponseJson {
-                message: String::from("The specified route doesn't exist"),
+                message: "The specified route doesn't exist".to_string(),
             },
             RouterError::InvalidJson => ResponseJson {
-                message: String::from("Invalid json specified"),
+                message: "Invalid json specified".to_string(),
             },
-            RouterError::DataFieldMissing => ResponseJson {
-                message: String::from("Field `data` is missing."),
+            RouterError::MissingField(field) => ResponseJson {
+                message: format!("Field `{}` is missing.", field),
             },
-            RouterError::DroneDown { .. } => ResponseJson {
-                message: format!("Drone: {:?} is down", self),
-            },
-            RouterError::PilotDown { .. } => ResponseJson {
-                message: format!("Pilot: {:?} is down", self),
+            RouterError::ClientDown(client) => ResponseJson {
+                message: match client {
+                    ClientType::Drone { .. } => format!("Drone: {:?} is down", client),
+                    ClientType::Pilot { .. } => format!("Pilot: {:?} is down", client),
+                },
             },
         }
     }

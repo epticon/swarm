@@ -21,41 +21,37 @@ struct Command {
 }
 
 pub(crate) fn send_command(
-    req: Option<Value>,
+    data: Option<Value>,
     client: &ClientType,
     ctx: &WebsocketContext<AlligatorServer, AlligatorServerState>,
 ) -> Result<ResponseJson, RouterError> {
-    let command = from_value::<Command>(req.ok_or(RouterError::DataFieldMissing)?).unwrap();
     let swarm_address = &ctx.state().address;
 
-    match client {
-        ClientType::Pilot { .. } => Ok(swarm_address
-            .try_send(SendCommandToDrones {
-                division_name: command.division_name.clone(),
-                message: command.message.clone(),
-                skip_id: None,
-            })
-            .map_err(|_| RouterError::DroneDown {
-                client: client.clone(), // improve this later (don't clone)
-            })
-            .and_then(|_| {
-                Ok(ResponseJson {
-                    message: "Message sent".to_string(),
-                })
-            })?),
+    let command = from_value::<Command>(data.ok_or_else(RouterError::missing_data_field)?)
+        .map_err(|_| RouterError::InvalidJson)?;
 
-        ClientType::Drone { .. } => Ok(swarm_address
-            .try_send(SendCommandToPilots {
-                message: command.message.clone(),
-                skip_id: None,
-            })
-            .map_err(|_| RouterError::PilotDown {
-                client: client.clone(), // improve this later
-            })
-            .and_then(|_| {
-                Ok(ResponseJson {
-                    message: "Message sent".to_string(),
+    match client {
+        ClientType::Pilot { .. } => {
+            swarm_address
+                .try_send(SendCommandToDrones {
+                    division_name: command.division_name.clone(),
+                    message: command.message.clone(),
+                    skip_id: None,
                 })
-            })?),
+                .map_err(|_| RouterError::ClientDown(client.clone()))?;
+
+            Ok(ResponseJson::message_sent())
+        }
+
+        ClientType::Drone { .. } => {
+            swarm_address
+                .try_send(SendCommandToPilots {
+                    message: command.message.clone(),
+                    skip_id: None,
+                })
+                .map_err(|_| RouterError::ClientDown(client.clone()))?;
+
+            Ok(ResponseJson::message_sent())
+        }
     }
 }
