@@ -4,7 +4,7 @@ use serde_json::Value;
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct RequestJson {
     path: String,
-    data: Value,
+    data: Option<Value>,
 }
 
 impl RequestJson {
@@ -12,7 +12,7 @@ impl RequestJson {
         &self.path
     }
 
-    pub(crate) fn data(&self) -> &Value {
-        &self.data
+    pub(crate) fn data(&self) -> Option<&Value> {
+        self.data.as_ref()
     }
 }

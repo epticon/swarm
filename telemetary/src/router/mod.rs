@@ -10,7 +10,7 @@ pub(crate) use self::app::get_routes as GetRoutes;
 pub(crate) use self::errors::RouterError;
 pub(crate) use self::includes::*;
 
-type Callback<T, C, W> = fn(Value, &C, &W) -> Result<T, RouterError>;
+type Callback<T, C, W> = fn(Option<Value>, &C, &W) -> Result<T, RouterError>;
 
 pub(crate) struct Router<T: Serialize, C, W> {
     inner: HashMap<String, Callback<T, C, W>>,

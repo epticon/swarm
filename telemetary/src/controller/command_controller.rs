@@ -21,11 +21,11 @@ struct Command {
 }
 
 pub(crate) fn send_command(
-    req: Value,
+    req: Option<Value>,
     client: &ClientType,
     ctx: &WebsocketContext<AlligatorServer, AlligatorServerState>,
 ) -> Result<ResponseJson, RouterError> {
-    let command = from_value::<Command>(req).unwrap();
+    let command = from_value::<Command>(req.ok_or(RouterError::DataFieldMissing)?).unwrap();
     let swarm_address = &ctx.state().address;
 
     match client {

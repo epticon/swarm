@@ -6,6 +6,7 @@ use serde_derive::{Deserialize, Serialize};
 pub(crate) enum RouterError {
     InvalidRoute,
     InvalidJson,
+    DataFieldMissing,
     DroneDown { client: ClientType },
     PilotDown { client: ClientType },
 }
@@ -18,6 +19,9 @@ impl Into<ResponseJson> for RouterError {
             },
             RouterError::InvalidJson => ResponseJson {
                 message: String::from("Invalid json specified"),
+            },
+            RouterError::DataFieldMissing => ResponseJson {
+                message: String::from("Field `data` is missing."),
             },
             RouterError::DroneDown { .. } => ResponseJson {
                 message: format!("Drone: {:?} is down", self),

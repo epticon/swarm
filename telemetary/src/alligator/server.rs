@@ -13,6 +13,7 @@ use actix::{
 };
 use actix_web::ws;
 use actix_web::ws::WebsocketContext;
+use actix_web::ws::WsWriter;
 use serde_derive::{Deserialize, Serialize};
 use std::time::Instant;
 
@@ -140,7 +141,7 @@ impl Actor for AlligatorServer {
                     .wait(ctx); // I'm not sure we should block the processing of events
             }
 
-            Err(err) => ctx.close(Some(ws::CloseReason {
+            Err(err) => ctx.send_close(Some(ws::CloseReason {
                 code: ws::CloseCode::Invalid,
                 description: Some(err.to_string()),
             })),
@@ -160,11 +161,11 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for AlligatorServer {
 
                 match request {
                     // Valid json
-                    Ok(ref json) => {
+                    Ok(json) => {
                         let callback = ctx.state().router.match_route(&json.path());
 
                         match callback(
-                            json.data().to_owned(),
+                            json.data().cloned(),
                             &self.client_type.as_ref().unwrap(),
                             ctx,
                         ) {
@@ -174,7 +175,7 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for AlligatorServer {
                     }
 
                     // Invalid Json
-                    Err(_err) => ctx.text(RouterError::InvalidRoute),
+                    Err(_) => ctx.text(RouterError::InvalidRoute),
                 }
             }
 
