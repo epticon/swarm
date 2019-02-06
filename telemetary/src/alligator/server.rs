@@ -153,7 +153,12 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for AlligatorServer {
     fn handle(&mut self, msg: ws::Message, ctx: &mut Self::Context) {
         match msg {
             ws::Message::Ping(msg) => {
+                self.last_heartbeat_time = Instant::now();
                 ctx.pong(&msg);
+            }
+
+            ws::Message::Pong(_) => {
+                self.last_heartbeat_time = Instant::now();
             }
 
             ws::Message::Text(msg) => {
@@ -181,7 +186,10 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for AlligatorServer {
                 }
             }
 
-            _ => ctx.pong("Invalid"),
+            ws::Message::Binary(_) => println!("Unexpected binary"),
+            ws::Message::Close(_) => {
+                ctx.stop();
+            }
         }
     }
 }
