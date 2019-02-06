@@ -29,18 +29,27 @@ where
     }
 }
 
-// Identify the client type of the connection, i.e. if it is a drone or a pilot.
+// Identify the client type of the connection, i.e. drone or pilot by
+// checking the header value ot the websocket request or fallback to
+// checking query params if missing.
 pub(crate) fn extract_client_type(
     ctx: &mut <AlligatorServer as Actor>::Context,
 ) -> Result<ClientType, HeaderError<String>> {
-    let value = ctx
-        .request()
-        .headers()
-        .get(CLIENT_TYPE_HEADER_KEY)
-        .ok_or_else(|| HeaderError::MissingHeaderKey(CLIENT_TYPE_HEADER_KEY.to_string()))?
-        .to_str()
-        .map_err(|_| HeaderError::InvalidHeaderKey(CLIENT_TYPE_HEADER_KEY.to_string()))?
-        .to_lowercase();
+    let value = match ctx.request().headers().get(CLIENT_TYPE_HEADER_KEY) {
+        // Header key is found
+        Some(item) => item
+            .to_str()
+            .map_err(|_| HeaderError::InvalidHeaderKey(CLIENT_TYPE_HEADER_KEY.to_string()))?
+            .to_string(),
+
+        // Header key not found in the, hence search in query params
+        None => ctx
+            .request()
+            .query()
+            .get(CLIENT_TYPE_HEADER_KEY)
+            .ok_or_else(|| HeaderError::MissingHeaderKey(CLIENT_TYPE_HEADER_KEY.to_string()))?
+            .to_lowercase(),
+    };
 
     match value.as_ref() {
         "drone" => Ok(ClientType::Drone {
