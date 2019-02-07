@@ -183,7 +183,7 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for AlligatorServer {
                     }
 
                     // Invalid Json
-                    Err(_) => ctx.text(RouterError::InvalidRoute),
+                    Err(_) => ctx.text(RouterError::MissingRoute),
                 }
             }
 

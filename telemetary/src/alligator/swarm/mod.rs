@@ -34,7 +34,7 @@ impl Swarm {
     {
         let json = Rc::new(to_string(&message).unwrap()); // this is safe
 
-        if let Some(node) = self.network.drones().get(division_name) {
+        if let Some(node) = self.network.get_division(&division_name) {
             for drone in node.drones().iter() {
                 if *drone.0 != skip_id {
                     (drone.1).1.address().do_send(Message(json.to_string()))?;

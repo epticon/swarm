@@ -60,7 +60,7 @@ pub(crate) fn extract_client_type(
             hash: rand::thread_rng().gen::<usize>().to_string(),
 
             // General is the default channel drone is connected to by default
-            division_name: "General".to_string(),
+            division_name: "general".to_string(),
         }),
 
         "pilot" => Ok(ClientType::Pilot {

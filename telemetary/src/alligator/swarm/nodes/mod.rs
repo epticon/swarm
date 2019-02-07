@@ -1,12 +1,7 @@
 use crate::alligator::swarm::{uavs::Drone, users::Pilot};
+use crate::alligator::utils::hash_string;
 use multi_map::MultiMap;
-use std::{
-    collections::{
-        hash_map::{DefaultHasher, Entry},
-        HashMap,
-    },
-    hash::{Hash, Hasher},
-};
+use std::collections::{hash_map::Entry, HashMap};
 
 mod drone;
 mod pilot;
@@ -37,20 +32,17 @@ impl Default for RootNode {
     }
 }
 
-// Hash a given string.
-fn hash_string(string: &str) -> String {
-    let mut hasher = DefaultHasher::new();
-    string.hash(&mut hasher);
-    hasher.finish().to_string()
-}
-
 impl RootNode {
     pub fn pilots(&self) -> Vec<&Pilot> {
         self.pilots.pilots()
     }
 
-    pub fn drones(&self) -> &HashMap<String, DroneNode> {
+    pub fn _drones(&self) -> &HashMap<String, DroneNode> {
         &self.drones
+    }
+
+    pub fn get_division(&self, division_name: &str) -> Option<&DroneNode> {
+        self.drones.get(&hash_string(&division_name.to_lowercase()))
     }
 
     pub fn insert_drone<'a>(&mut self, division_name: &'a str, drone: Drone) -> usize {

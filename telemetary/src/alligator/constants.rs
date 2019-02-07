@@ -11,5 +11,4 @@ pub(crate) const MAX_CLIENT_TIMEOUT: Duration = Duration::from_secs(120); // 2 m
 pub(crate) const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(20);
 
 // Todo: Remove this and replace with hash retrieved from database.
-pub(crate) const FAKE_PILOT_CLIENT_HASH: &str =
-  "23hbch2r2jhdb2hjfb2j3hb2jlfhbjfbh2jfb2jfhbjrbjh1fb";
+pub(crate) const FAKE_PILOT_CLIENT_HASH: &str = "$$$$$";

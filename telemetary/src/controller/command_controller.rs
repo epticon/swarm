@@ -31,7 +31,7 @@ pub(crate) fn send_command(
 ) -> Result<ResponseJson, RouterError> {
     let body = body
         .content()
-        .ok_or_else(RouterError::missing_data_field)?
+        .ok_or_else(RouterError::body_missing)?
         .clone();
 
     process_command(

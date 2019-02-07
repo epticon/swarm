@@ -6,13 +6,14 @@ use serde_derive::{Deserialize, Serialize};
 pub(crate) enum RouterError {
     InvalidRoute,
     InvalidJson,
+    MissingRoute,
     MissingField(String),
     ClientDown(ClientType),
 }
 
 impl RouterError {
-    pub fn missing_data_field() -> Self {
-        RouterError::MissingField("data".to_string())
+    pub fn body_missing() -> Self {
+        RouterError::MissingField("body".to_string())
     }
 }
 
@@ -27,6 +28,9 @@ impl Into<ResponseJson> for RouterError {
             },
             RouterError::MissingField(field) => ResponseJson {
                 message: format!("Field `{}` is missing.", field),
+            },
+            RouterError::MissingRoute => ResponseJson {
+                message: "Param `route` is missing.".to_string(),
             },
             RouterError::ClientDown(client) => ResponseJson {
                 message: match client {
