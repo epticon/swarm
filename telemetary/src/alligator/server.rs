@@ -168,7 +168,7 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for AlligatorServer {
                 match request {
                     // Valid json
                     Ok(json) => {
-                        let callback = ctx.state().router.match_route(&json.path());
+                        let callback = ctx.state().router.match_route(&json.route());
 
                         match callback(
                             Body::new(json.data()),
