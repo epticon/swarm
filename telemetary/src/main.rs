@@ -5,6 +5,7 @@ use colored::Colorize;
 use dotenv::var as env;
 
 mod alligator;
+mod constants;
 mod controller;
 mod router;
 

@@ -9,6 +9,7 @@ pub(crate) enum RouterError {
     MissingRoute,
     MissingField(String),
     ClientDown(ClientType),
+    UnsupportedClient(ClientType),
 }
 
 impl RouterError {
@@ -37,6 +38,9 @@ impl Into<ResponseJson> for RouterError {
                     ClientType::Drone { .. } => format!("Drone: {:?} is down", client),
                     ClientType::Pilot { .. } => format!("Pilot: {:?} is down", client),
                 },
+            },
+            RouterError::UnsupportedClient(client) => ResponseJson {
+                message: format!("{:?} is down", client),
             },
         }
     }

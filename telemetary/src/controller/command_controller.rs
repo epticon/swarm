@@ -1,7 +1,8 @@
 use crate::alligator::swarm::Swarm;
+use crate::constants::drone_routes;
 use crate::router::Body;
 use crate::{
-    alligator::swarm::{SendCommandToDrones, SendCommandToPilots},
+    alligator::swarm::SendCommandToDrones,
     router::{ResponseJson, RouterError},
     AlligatorServer, AlligatorServerState, ClientType,
 };
@@ -11,14 +12,17 @@ use serde::Deserialize;
 use serde_derive::{Deserialize, Serialize};
 use serde_json::{from_value, Value};
 
-#[derive(Copy, Clone, Deserialize, Serialize)]
 #[allow(dead_code)]
+#[derive(Copy, Clone, Deserialize, Serialize)]
 enum Instruction {
+    #[serde(alias = "land", rename = "land")]
     Land,
+
+    #[serde(alias = "navigate", rename = "navigate")]
     Navigate { lat: i32, long: i32, altitude: i16 },
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Deserialize, Serialize)]
 struct Command {
     division_name: String,
     instruction: Instruction,
@@ -51,24 +55,14 @@ fn process_command(
             swarm_address
                 .try_send(SendCommandToDrones {
                     division_name: command.division_name.clone(),
-                    message: serde_json::to_string(&command.instruction).unwrap(),
+                    message: generate_json_command_message(drone_routes::COMMAND, &command),
                     skip_id: None,
                 })
                 .map_err(|_| RouterError::ClientDown(client.clone()))?;
 
             Ok(ResponseJson::message_sent())
         }
-
-        ClientType::Drone { .. } => {
-            swarm_address
-                .try_send(SendCommandToPilots {
-                    message: serde_json::to_string(&command.instruction).unwrap(),
-                    skip_id: None,
-                })
-                .map_err(|_| RouterError::ClientDown(client.clone()))?;
-
-            Ok(ResponseJson::message_sent())
-        }
+        _ => Err(RouterError::UnsupportedClient(client.to_owned())),
     }
 }
 
@@ -77,4 +71,12 @@ where
     for<'de> T: Deserialize<'de>,
 {
     Ok(from_value::<T>(data).map_err(|_| RouterError::InvalidJson)?)
+}
+
+fn generate_json_command_message(route: &str, command: &Command) -> String {
+    serde_json::json!({
+        "route": route,
+        "command": &command
+    })
+    .to_string()
 }
