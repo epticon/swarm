@@ -10,7 +10,19 @@ pub(crate) use self::app::get_routes as GetRoutes;
 pub(crate) use self::errors::RouterError;
 pub(crate) use self::includes::*;
 
-type Callback<T, C, W> = fn(Option<Value>, &C, &W) -> Result<T, RouterError>;
+pub(crate) struct Body<'a>(Option<&'a Value>);
+
+impl<'a> Body<'a> {
+    pub fn new(content: Option<&'a Value>) -> Self {
+        Self(content)
+    }
+
+    pub fn content(&self) -> Option<&Value> {
+        self.0 // fix this, dont transfer ownership
+    }
+}
+
+type Callback<T, C, W> = fn(Body, &C, &W) -> Result<T, RouterError>;
 
 pub(crate) struct Router<T: Serialize, C, W> {
     inner: HashMap<String, Callback<T, C, W>>,

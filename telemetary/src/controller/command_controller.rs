@@ -1,15 +1,19 @@
+use crate::alligator::swarm::Swarm;
+use crate::router::Body;
 use crate::{
     alligator::swarm::{SendCommandToDrones, SendCommandToPilots},
     router::{ResponseJson, RouterError},
     AlligatorServer, AlligatorServerState, ClientType,
 };
+use actix::Addr;
 use actix_web::ws::WebsocketContext;
-use serde_derive::Deserialize;
+use serde::Deserialize;
+use serde_derive::{Deserialize, Serialize};
 use serde_json::{from_value, Value};
 
-#[derive(Copy, Clone, Deserialize)]
+#[derive(Copy, Clone, Deserialize, Serialize)]
 #[allow(dead_code)]
-enum CommandType {
+enum Instruction {
     Land,
     Navigate { lat: i32, long: i32, altitude: i16 },
 }
@@ -17,25 +21,37 @@ enum CommandType {
 #[derive(Clone, Deserialize)]
 struct Command {
     division_name: String,
-    message: String,
+    instruction: Instruction,
 }
 
 pub(crate) fn send_command(
-    data: Option<Value>,
+    body: Body,
     client: &ClientType,
     ctx: &WebsocketContext<AlligatorServer, AlligatorServerState>,
 ) -> Result<ResponseJson, RouterError> {
-    let swarm_address = &ctx.state().address;
+    let body = body
+        .content()
+        .ok_or_else(RouterError::missing_data_field)?
+        .clone();
 
-    let command = from_value::<Command>(data.ok_or_else(RouterError::missing_data_field)?)
-        .map_err(|_| RouterError::InvalidJson)?;
+    process_command(
+        &serialize_command::<Command>(body)?,
+        client,
+        &ctx.state().address,
+    )
+}
 
+fn process_command(
+    command: &Command,
+    client: &ClientType,
+    swarm_address: &Addr<Swarm>,
+) -> Result<ResponseJson, RouterError> {
     match client {
         ClientType::Pilot { .. } => {
             swarm_address
                 .try_send(SendCommandToDrones {
                     division_name: command.division_name.clone(),
-                    message: command.message.clone(),
+                    message: serde_json::to_string(&command.instruction).unwrap(),
                     skip_id: None,
                 })
                 .map_err(|_| RouterError::ClientDown(client.clone()))?;
@@ -46,7 +62,7 @@ pub(crate) fn send_command(
         ClientType::Drone { .. } => {
             swarm_address
                 .try_send(SendCommandToPilots {
-                    message: command.message.clone(),
+                    message: serde_json::to_string(&command.instruction).unwrap(),
                     skip_id: None,
                 })
                 .map_err(|_| RouterError::ClientDown(client.clone()))?;
@@ -54,4 +70,11 @@ pub(crate) fn send_command(
             Ok(ResponseJson::message_sent())
         }
     }
+}
+
+fn serialize_command<T>(data: Value) -> Result<T, RouterError>
+where
+    for<'de> T: Deserialize<'de>,
+{
+    Ok(from_value::<T>(data).map_err(|_| RouterError::InvalidJson)?)
 }

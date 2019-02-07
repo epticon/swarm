@@ -3,6 +3,7 @@ use crate::alligator::{
     constants::{HEARTBEAT_INTERVAL, MAX_CLIENT_TIMEOUT},
     swarm::{Connect, Disconnect, Message, Swarm},
 };
+use crate::router::Body;
 use crate::router::{RequestJson, ResponseJson, Router, RouterError};
 use actix::{
     fut,
@@ -170,7 +171,7 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for AlligatorServer {
                         let callback = ctx.state().router.match_route(&json.path());
 
                         match callback(
-                            json.data().cloned(),
+                            Body::new(json.data()),
                             // Unwrapping client_type is safe, as clients cannot be
                             // created without having a client_type.
                             &self.client_type.as_ref().unwrap(),
