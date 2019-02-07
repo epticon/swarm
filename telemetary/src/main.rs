@@ -1,6 +1,7 @@
 use crate::alligator::{server::*, swarm::Swarm};
 use actix::{Arbiter, System};
 use actix_web::{server::HttpServer, ws, App, Error, HttpRequest, HttpResponse};
+use colored::Colorize;
 use dotenv::var as env;
 
 mod alligator;
@@ -35,7 +36,11 @@ fn main() {
     .start();
 
     // Get started.
-    println!("Server started at {}:{}", server_address, server_port);
+    println!(
+        "🚀 {} {}",
+        "Serving application at".green(),
+        format!("{}:{}", server_address, server_port).red().bold(),
+    );
 
     sys.run();
 }

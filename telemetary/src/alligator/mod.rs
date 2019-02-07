@@ -1,12 +1,18 @@
 use chrono::prelude::Utc;
+use colored::Colorize;
 
 mod constants;
-mod utils;
 pub(crate) mod server;
 pub(crate) mod swarm;
+mod utils;
 
 fn log(text: &str) {
-    println!("{} >> {}", Utc::now(), text);
+    println!(
+        "{} @ {} : {}",
+        "New Connection".green().bold(),
+        format!("{}", Utc::now().time().format("%-I:%M %p")).yellow(),
+        text.red()
+    );
 }
 
 // pub(crate) mod macros {
