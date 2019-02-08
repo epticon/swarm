@@ -50,7 +50,7 @@ where
         }
     }
 
-    fn add_route(&mut self, path: &str, callback: Callback<T, C, W>) -> &Self {
+    fn add_route(&mut self, path: &str, callback: Callback<T, C, W>) -> &mut Self {
         self.inner.insert(path.to_string(), callback);
         self
     }
