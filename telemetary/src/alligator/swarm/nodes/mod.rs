@@ -41,8 +41,13 @@ impl RootNode {
         &self.drones
     }
 
-    pub fn get_division(&self, division_name: &str) -> Option<&DroneNode> {
+    pub fn _get_division(&self, division_name: &str) -> Option<&DroneNode> {
         self.drones.get(&hash_string(&division_name.to_lowercase()))
+    }
+
+    pub fn get_division_as_mut(&mut self, division_name: &str) -> Option<&mut DroneNode> {
+        self.drones
+            .get_mut(&hash_string(&division_name.to_lowercase()))
     }
 
     pub fn insert_drone<'a>(&mut self, division_name: &'a str, drone: Drone) -> usize {

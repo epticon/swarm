@@ -24,7 +24,7 @@ impl Actor for Swarm {
 
 impl Swarm {
     fn send_message_to_drones<T: Serialize>(
-        &self,
+        &mut self,
         division_name: &str,
         message: &T,
         skip_id: usize,
@@ -34,11 +34,24 @@ impl Swarm {
     {
         let json = Rc::new(to_string(&message).unwrap()); // this is safe
 
-        if let Some(node) = self.network.get_division(&division_name) {
+        if let Some(node) = self.network.get_division_as_mut(&division_name) {
+            let mut closed_drones = vec![];
+
             for drone in node.drones().iter() {
                 if *drone.0 != skip_id {
-                    (drone.1).1.address().do_send(Message(json.to_string()))?;
+                    let response = (drone.1).1.address().try_send(Message(json.to_string()));
+
+                    if response.is_err() {
+                        closed_drones.push(*drone.0);
+                    }
                 }
+            }
+
+            // Remove every disconnected drones (failure to do so, will result
+            //  in delayed sending of messaged to drones in future).
+            for session_id in closed_drones.iter() {
+                node.remove(*session_id);
+                println!("Failed to send to drone with ID: {}", session_id);
             }
         }
 

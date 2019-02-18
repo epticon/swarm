@@ -44,6 +44,10 @@ impl DroneNode {
         &self.inner
     }
 
+    pub fn drones_as_mut(&mut self) -> &mut MultiMap<Session, HashString, Drone> {
+        &mut self.inner
+    }
+
     pub fn _get_values(&self) -> Vec<&Drone> {
         self.get_all(&self.inner)
     }
