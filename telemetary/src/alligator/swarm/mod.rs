@@ -51,7 +51,10 @@ impl Swarm {
             //  in delayed sending of messaged to drones in future).
             for session_id in closed_drones.iter() {
                 node.remove(*session_id);
-                println!("Failed to send to drone with ID: {}", session_id);
+                println!(
+                    "Removing drone with ID: {}, as client connection is closed.",
+                    session_id
+                );
             }
         }
 
