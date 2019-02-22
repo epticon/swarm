@@ -33,19 +33,24 @@ impl Default for RootNode {
 }
 
 impl RootNode {
-    pub fn pilots(&self) -> Vec<&Pilot> {
-        self.pilots.pilots()
+    #[allow(dead_code)]
+    pub fn pilots_data(&self) -> Vec<&Pilot> {
+        self.pilots.pilots_data()
+    }
+
+    pub fn pilots_node(&self) -> &PilotNode {
+        &self.pilots
     }
 
     pub fn _drones(&self) -> &HashMap<String, DroneNode> {
         &self.drones
     }
 
-    pub fn _get_division(&self, division_name: &str) -> Option<&DroneNode> {
+    pub fn _division(&self, division_name: &str) -> Option<&DroneNode> {
         self.drones.get(&hash_string(&division_name.to_lowercase()))
     }
 
-    pub fn get_division_as_mut(&mut self, division_name: &str) -> Option<&mut DroneNode> {
+    pub fn division_as_mut(&mut self, division_name: &str) -> Option<&mut DroneNode> {
         self.drones
             .get_mut(&hash_string(&division_name.to_lowercase()))
     }

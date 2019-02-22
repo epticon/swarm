@@ -41,7 +41,12 @@ impl PilotNode {
         self.inner.get_alt(&hash)
     }
 
-    pub fn pilots(&self) -> Vec<&Pilot> {
+    pub fn pilots(&self) -> &MultiMap<Session, HashString, Pilot> {
+        &self.inner
+    }
+
+    #[allow(dead_code)]
+    pub fn pilots_data(&self) -> Vec<&Pilot> {
         self.get_all(&self.inner)
     }
 }

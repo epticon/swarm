@@ -34,12 +34,12 @@ impl Swarm {
     {
         let json = Rc::new(to_string(&message).unwrap()); // this is safe
 
-        if let Some(node) = self.network.get_division_as_mut(&division_name) {
+        if let Some(node) = self.network.division_as_mut(&division_name) {
             let mut closed_drones = vec![];
 
             for drone in node.drones().iter() {
                 if *drone.0 != skip_id {
-                    let response = (drone.1).1.address().try_send(Message(json.to_string()));
+                    let response = (drone.1).1.address().do_send(Message(json.to_string()));
 
                     if response.is_err() {
                         closed_drones.push(*drone.0);
@@ -47,12 +47,11 @@ impl Swarm {
                 }
             }
 
-            // Remove every disconnected drones (failure to do so, will result
-            //  in delayed sending of messaged to drones in future).
+            // Remove every disconnected drone. This helps remove redundant clients.
             for session_id in closed_drones.iter() {
                 node.remove(*session_id);
                 println!(
-                    "Removing drone with ID: {}, as client connection is closed.",
+                    "Removing drone with Session: {}, as client connection is closed.",
                     session_id
                 );
             }
@@ -61,11 +60,30 @@ impl Swarm {
         Ok(())
     }
 
-    fn send_message_to_pilots<T: Serialize>(&self, message: &T) -> Result<(), SendError<Message>> {
+    fn send_message_to_pilots<T: Serialize>(
+        &mut self,
+        message: &T,
+    ) -> Result<(), SendError<Message>> {
         let json = Rc::new(to_string(&message).unwrap()); // this is safe
 
-        for pilot in self.network.pilots().iter() {
-            pilot.address().do_send(Message(json.to_string()))?;
+        let mut closed_pilots = vec![];
+
+        for pilot in self.network.pilots_node().pilots().iter() {
+            let response = (pilot.1).1.address().do_send(Message(json.to_string()));
+
+            if response.is_err() {
+                closed_pilots.push(*pilot.0);
+            }
+        }
+
+        // Remove every disconnected pilot. This helps remove redundant clients.
+        for session_id in closed_pilots.iter() {
+            self.network.remove_pilot(*session_id);
+
+            println!(
+                "Removing pilot with Session: {}, as client connection is closed.",
+                session_id
+            );
         }
 
         Ok(())
