@@ -5,13 +5,20 @@ use crate::{
     router::{Body, ResponseJson, RouterError},
     ClientType,
 };
-use serde_derive::{Deserialize, Serialize};
+use std::collections::HashMap;
+// use serde_derive::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize)]
-enum TelemetaryTypes {}
-
-#[derive(Deserialize, Serialize)]
-struct Telemetary(TelemetaryTypes);
+// We are serializing the telemetary data so as to reduce
+// any form of latency(from serializaion). Instead, as the telemetary
+// information are being generated from the drone client,
+// they are forwarded untouced. The serialization and verification
+// should be performed on the clients browser.
+// Another alternative is to both parse the data here on the server
+// and serialize to support telemetary types, before messaging pilot
+// with valid JSON values.
+//
+// Telemetary parsing has been carried out in the copter telemetary project.
+type Telemetary = HashMap<String, String>;
 
 pub(crate) fn send_telemetary(
     body: Body,
