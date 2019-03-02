@@ -24,8 +24,13 @@ impl DroneNode {
         }
     }
 
-    pub fn insert(&mut self, drone: Drone) -> Session {
-        let session_id = self.range.gen::<Session>();
+    pub fn insert(&mut self, drone: Drone, session_id: Option<usize>) -> Session {
+        let session_id = match session_id {
+            None => self.range.gen::<Session>(),
+            Some(id) if !self.inner.contains_key(&id) => self.range.gen::<Session>(),
+            Some(id) => id,
+        };
+
         self.inner
             .insert(session_id, drone.hash().to_string(), drone);
 

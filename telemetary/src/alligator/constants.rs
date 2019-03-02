@@ -12,3 +12,5 @@ pub(crate) const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(4);
 
 // Todo: Remove this and replace with hash retrieved from database.
 pub(crate) const FAKE_PILOT_CLIENT_HASH: &str = "$$$$$";
+
+pub(crate) const DEFAULT_DRONE_CHANNEL: &str = "general";

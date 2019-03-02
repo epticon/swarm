@@ -1,5 +1,5 @@
 use crate::alligator::{
-    constants::{CLIENT_TYPE_HEADER_KEY, FAKE_PILOT_CLIENT_HASH},
+    constants::{CLIENT_TYPE_HEADER_KEY, DEFAULT_DRONE_CHANNEL, FAKE_PILOT_CLIENT_HASH},
     server::{AlligatorServer, ClientType},
 };
 use actix::Actor;
@@ -60,7 +60,7 @@ pub(crate) fn extract_client_type(
             hash: rand::thread_rng().gen::<usize>().to_string(),
 
             // General is the default channel drone is connected to by default
-            division_name: "general".to_string(),
+            division_name: DEFAULT_DRONE_CHANNEL.to_string(),
         }),
 
         "pilot" => Ok(ClientType::Pilot {
