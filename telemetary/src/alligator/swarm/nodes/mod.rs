@@ -84,6 +84,10 @@ impl RootNode {
         self.drones.get(&hash_string(&division_name.to_lowercase()))
     }
 
+    pub fn division_names(&self) -> Vec<&String> {
+        self.drones.keys().collect()
+    }
+
     pub fn division_as_mut(&mut self, division_name: &str) -> Option<&mut DroneNode> {
         self.drones
             .get_mut(&hash_string(&division_name.to_lowercase()))

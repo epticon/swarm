@@ -22,7 +22,7 @@ impl<'a> Body<'a> {
     }
 }
 
-type Callback<T, C, W> = fn(Body, &C, &W) -> Result<T, RouterError>;
+type Callback<T, C, W> = fn(Body, &C, &mut W) -> Result<T, RouterError>;
 
 pub(crate) struct Router<T: Serialize, C, W> {
     inner: HashMap<String, Callback<T, C, W>>,

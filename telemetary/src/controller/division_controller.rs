@@ -1,40 +1,38 @@
 use crate::{
-    alligator::swarm::{
-        CreateDivision as CreateDivisionCommand, DeleteDivision as DeleteDivisionCommand,
-        SendCommandToPilots,
-    },
+    alligator::swarm::{CreateDivision, DeleteDivision, GetAllDivisions, SendCommandToPilots},
     constants::pilot_routes,
     controller::{serialize_value, AlligatorSocketContext},
     router::Body,
     router::{ResponseJson, RouterError},
     ClientType,
 };
+use futures::future::Future;
 use serde::Serialize;
 use serde_derive::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
-struct CreateDivision(String);
+struct CreateDivisionRq(String);
 
 #[derive(Deserialize, Serialize)]
-struct DeleteDivision(String);
+struct DeleteDivisionRq(String);
 
-pub(crate) fn delete_division(
+pub(crate) fn delete(
     body: Body,
     client: &ClientType,
-    ctx: &AlligatorSocketContext,
+    ctx: &mut AlligatorSocketContext,
 ) -> Result<ResponseJson, RouterError> {
     let body = body
         .content()
         .ok_or_else(RouterError::body_missing)?
         .clone();
 
-    let delete = &serialize_value::<DeleteDivision>(body)?;
+    let delete = &serialize_value::<DeleteDivisionRq>(body)?;
 
     match client {
         ClientType::Pilot { .. } => {
             ctx.state()
                 .address
-                .try_send(DeleteDivisionCommand(delete.0.to_string()))
+                .try_send(DeleteDivision(delete.0.to_string()))
                 .map_err(|_| RouterError::ClientDown(client.clone()))?;
 
             ctx.state()
@@ -52,23 +50,23 @@ pub(crate) fn delete_division(
     }
 }
 
-pub(crate) fn create_division(
+pub(crate) fn create(
     body: Body,
     client: &ClientType,
-    ctx: &AlligatorSocketContext,
+    ctx: &mut AlligatorSocketContext,
 ) -> Result<ResponseJson, RouterError> {
     let body = body
         .content()
         .ok_or_else(RouterError::body_missing)?
         .clone();
 
-    let create = &serialize_value::<CreateDivision>(body)?;
+    let create = &serialize_value::<CreateDivisionRq>(body)?;
 
     match client {
         ClientType::Pilot { .. } => {
             ctx.state()
                 .address
-                .try_send(CreateDivisionCommand(create.0.to_string()))
+                .try_send(CreateDivision(create.0.to_string()))
                 .map_err(|_| RouterError::ClientDown(client.clone()))?;
 
             ctx.state()
@@ -80,6 +78,31 @@ pub(crate) fn create_division(
                 .map_err(|_| RouterError::ClientDown(client.clone()))?;
 
             Ok(ResponseJson::message_sent())
+        }
+
+        _ => Err(RouterError::UnsupportedClient(client.to_owned())),
+    }
+}
+
+pub(crate) fn get_all(
+    _: Body,
+    client: &ClientType,
+    ctx: &mut AlligatorSocketContext,
+) -> Result<ResponseJson, RouterError> {
+    match client {
+        ClientType::Pilot { .. } => {
+            let divisions = ctx
+                .state()
+                .address
+                .send(GetAllDivisions)
+                .map_err(|s| s.into())
+                .and_then(|res| res.map_err(|_| RouterError::ClientDown(client.clone())))
+                .wait()?;
+
+            Ok(ResponseJson::from(&stringify_response(
+                &divisions,
+                pilot_routes::DIVISIONS,
+            )))
         }
 
         _ => Err(RouterError::UnsupportedClient(client.to_owned())),

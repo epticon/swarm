@@ -11,4 +11,10 @@ impl ResponseJson {
             message: "Message sent".to_string(),
         }
     }
+
+    pub fn from(msg: &str) -> Self {
+        Self {
+            message: msg.to_string(),
+        }
+    }
 }

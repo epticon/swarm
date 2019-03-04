@@ -26,7 +26,7 @@ struct Command {
 pub(crate) fn send_command(
     body: Body,
     client: &ClientType,
-    ctx: &AlligatorSocketContext,
+    ctx: &mut AlligatorSocketContext,
 ) -> Result<ResponseJson, RouterError> {
     let body = body
         .content()

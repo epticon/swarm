@@ -23,7 +23,7 @@ type Telemetary = HashMap<String, String>;
 pub(crate) fn send_telemetary(
     body: Body,
     client: &ClientType,
-    ctx: &AlligatorSocketContext,
+    ctx: &mut AlligatorSocketContext,
 ) -> Result<ResponseJson, RouterError> {
     let body = body
         .content()
