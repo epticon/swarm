@@ -12,7 +12,13 @@ impl ResponseJson {
         }
     }
 
-    pub fn from(msg: &str) -> Self {
+    pub fn success() -> Self {
+        Self {
+            message: "Success".to_string(),
+        }
+    }
+
+    pub fn new(msg: &str) -> Self {
         Self {
             message: msg.to_string(),
         }

@@ -35,6 +35,8 @@ pub(crate) fn delete(
                 .try_send(DeleteDivision(delete.0.to_string()))
                 .map_err(|_| RouterError::ClientDown(client.clone()))?;
 
+            // Broadcast deletion to all pilots, to enable pilots have an
+            // update-to-date info of the swarm locally.
             ctx.state()
                 .address
                 .try_send(SendCommandToPilots {
@@ -43,7 +45,10 @@ pub(crate) fn delete(
                 })
                 .map_err(|_| RouterError::ClientDown(client.clone()))?;
 
-            Ok(ResponseJson::message_sent())
+            Ok(ResponseJson::new(&format!(
+                "Division {:?} deleted successfully.",
+                delete.0
+            )))
         }
 
         _ => Err(RouterError::UnsupportedClient(client.to_owned())),
@@ -69,6 +74,8 @@ pub(crate) fn create(
                 .try_send(CreateDivision(create.0.to_string()))
                 .map_err(|_| RouterError::ClientDown(client.clone()))?;
 
+            // Broadcast division creating to all pilots, to enable pilots have an
+            // update-to-date info of the swarm locally.
             ctx.state()
                 .address
                 .try_send(SendCommandToPilots {
@@ -77,7 +84,10 @@ pub(crate) fn create(
                 })
                 .map_err(|_| RouterError::ClientDown(client.clone()))?;
 
-            Ok(ResponseJson::message_sent())
+            Ok(ResponseJson::new(&format!(
+                "Division {:?} created successfully.",
+                create.0
+            )))
         }
 
         _ => Err(RouterError::UnsupportedClient(client.to_owned())),
@@ -99,7 +109,9 @@ pub(crate) fn get_all(
                 .and_then(|res| res.map_err(|_| RouterError::ClientDown(client.clone())))
                 .wait()?;
 
-            Ok(ResponseJson::from(&stringify_response(
+            // Send only to the client who initiated the request
+            // to get all division names
+            Ok(ResponseJson::new(&stringify_response(
                 &divisions,
                 pilot_routes::DIVISIONS,
             )))
