@@ -1,6 +1,10 @@
-use crate::alligator::swarm::{uavs::Drone, users::Pilot};
-use crate::alligator::utils::hash_string;
+use crate::alligator::{
+    constants::DEFAULT_DRONE_CHANNEL,
+    swarm::{uavs::Drone, users::Pilot},
+    utils::hash_string,
+};
 use multi_map::MultiMap;
+use std::cell::RefCell;
 use std::collections::{hash_map::Entry, HashMap};
 
 mod drone;
@@ -38,6 +42,36 @@ impl RootNode {
         self.pilots.pilots_data()
     }
 
+    pub fn get_default_division(&mut self) -> &mut DroneNode {
+        self.get_or_create_division(DEFAULT_DRONE_CHANNEL)
+    }
+
+    pub fn get_or_create_division(&mut self, name: &str) -> &mut DroneNode {
+        self.drones
+            .entry(name.to_string())
+            .or_insert_with(DroneNode::default)
+    }
+
+    pub fn delete_division(&mut self, name: &str) {
+        let rc_self = RefCell::new(self);
+        let sf1 = rc_self.borrow();
+        let mut sf2 = rc_self.borrow_mut();
+
+        if let Some(node) = sf1.drones.get(name) {
+            for drone in node.drones().iter() {
+                // Move all drones in division that is about to be deleted division into
+                // the default divison (General) before deleting.
+                sf2.get_default_division()
+                    .insert((drone.1).1.to_owned(), Some(*drone.0));
+
+                sf2.drones.get_mut(name).and_then(|e: &mut DroneNode| {
+                    e.remove(*drone.0);
+                    Some(())
+                });
+            }
+        }
+    }
+
     pub fn pilots_node(&self) -> &PilotNode {
         &self.pilots
     }
@@ -62,7 +96,7 @@ impl RootNode {
         {
             Entry::Vacant(node) => {
                 let mut drone_node = DroneNode::new();
-                let session_id = drone_node.insert(drone);
+                let session_id = drone_node.insert(drone, None);
 
                 // Inserts a new drone node with the division
                 // name that was checked for.
@@ -70,7 +104,7 @@ impl RootNode {
                 session_id
             }
 
-            Entry::Occupied(mut value) => value.get_mut().insert(drone),
+            Entry::Occupied(mut value) => value.get_mut().insert(drone, None),
         }
     }
 

@@ -1,9 +1,11 @@
 pub(crate) mod command_controller;
 pub(crate) mod telemetary_controller;
+pub(crate) mod division_controller;
 
-use crate::alligator::server::AlligatorServer;
-use crate::alligator::server::AlligatorServerState;
-use crate::router::RouterError;
+use crate::{
+    alligator::server::AlligatorServer, alligator::server::AlligatorServerState,
+    router::RouterError,
+};
 use actix_web::ws::WebsocketContext;
 use serde::Deserialize;
 use serde_json::{from_value, Value};
