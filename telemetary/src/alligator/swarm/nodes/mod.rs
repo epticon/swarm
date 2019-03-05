@@ -37,13 +37,61 @@ impl Default for RootNode {
 }
 
 impl RootNode {
+    pub fn _drones_node(&self) -> &HashMap<String, DroneNode> {
+        &self.drones
+    }
+
+    pub fn pilots_node(&self) -> &PilotNode {
+        &self.pilots
+    }
+
+    pub fn division_names(&self) -> Vec<&String> {
+        self.drones.keys().collect()
+    }
+
+    pub fn insert_drone<'a>(&mut self, division_name: &'a str, drone: Drone) -> usize {
+        match self
+            .drones
+            .entry(hash_string(&division_name.to_lowercase()))
+        {
+            Entry::Vacant(node) => {
+                let mut drone_node = DroneNode::new();
+                let session_id = drone_node.insert(drone, None);
+
+                // Inserts a new drone node with the division
+                // name that was checked for.
+                node.insert(drone_node);
+                session_id
+            }
+
+            Entry::Occupied(mut value) => value.get_mut().insert(drone, None),
+        }
+    }
+
+    pub fn remove_drone(&mut self, division_name: &str, session_id: Session) -> Option<Drone> {
+        self.drones.remove(division_name)?.remove(session_id)
+    }
+
+    pub fn insert_pilot(&mut self, pilot: Pilot) -> usize {
+        self.pilots.insert(pilot)
+    }
+
+    pub fn remove_pilot(&mut self, session_id: Session) -> Option<Pilot> {
+        self.pilots.remove(session_id)
+    }
+
     #[allow(dead_code)]
     pub fn pilots_data(&self) -> Vec<&Pilot> {
         self.pilots.pilots_data()
     }
 
-    pub fn get_default_division(&mut self) -> &mut DroneNode {
-        self.get_or_create_division(DEFAULT_DRONE_CHANNEL)
+    pub fn _division(&self, division_name: &str) -> Option<&DroneNode> {
+        self.drones.get(&hash_string(&division_name.to_lowercase()))
+    }
+
+    pub fn division_as_mut(&mut self, division_name: &str) -> Option<&mut DroneNode> {
+        self.drones
+            .get_mut(&hash_string(&division_name.to_lowercase()))
     }
 
     pub fn get_or_create_division(&mut self, name: &str) -> &mut DroneNode {
@@ -72,56 +120,8 @@ impl RootNode {
         }
     }
 
-    pub fn pilots_node(&self) -> &PilotNode {
-        &self.pilots
-    }
-
-    pub fn _drones(&self) -> &HashMap<String, DroneNode> {
-        &self.drones
-    }
-
-    pub fn _division(&self, division_name: &str) -> Option<&DroneNode> {
-        self.drones.get(&hash_string(&division_name.to_lowercase()))
-    }
-
-    pub fn division_names(&self) -> Vec<&String> {
-        self.drones.keys().collect()
-    }
-
-    pub fn division_as_mut(&mut self, division_name: &str) -> Option<&mut DroneNode> {
-        self.drones
-            .get_mut(&hash_string(&division_name.to_lowercase()))
-    }
-
-    pub fn insert_drone<'a>(&mut self, division_name: &'a str, drone: Drone) -> usize {
-        match self
-            .drones
-            .entry(hash_string(&division_name.to_lowercase()))
-        {
-            Entry::Vacant(node) => {
-                let mut drone_node = DroneNode::new();
-                let session_id = drone_node.insert(drone, None);
-
-                // Inserts a new drone node with the division
-                // name that was checked for.
-                node.insert(drone_node);
-                session_id
-            }
-
-            Entry::Occupied(mut value) => value.get_mut().insert(drone, None),
-        }
-    }
-
-    pub fn insert_pilot(&mut self, pilot: Pilot) -> usize {
-        self.pilots.insert(pilot)
-    }
-
-    pub fn remove_drone(&mut self, division_name: &str, session_id: Session) -> Option<Drone> {
-        self.drones.remove(division_name)?.remove(session_id)
-    }
-
-    pub fn remove_pilot(&mut self, session_id: Session) -> Option<Pilot> {
-        self.pilots.remove(session_id)
+    pub fn get_default_division(&mut self) -> &mut DroneNode {
+        self.get_or_create_division(DEFAULT_DRONE_CHANNEL)
     }
 }
 
