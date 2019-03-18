@@ -8,6 +8,7 @@ mod alligator;
 mod constants;
 mod controller;
 mod router;
+mod mavlink;
 
 fn swarm_index_route(req: &HttpRequest<AlligatorServerState>) -> Result<HttpResponse, Error> {
     ws::start(req, AlligatorServer::default())
