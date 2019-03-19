@@ -1,8 +1,7 @@
 use crate::{
     alligator::swarm::SendCommandToDrones,
     constants::drone_routes,
-    controller::{serialize_value, AlligatorSocketContext},
-    mavlink::MavLinkCommands,
+    controller::{json_definitions::Instruction, serialize_value, AlligatorSocketContext},
     router::Body,
     router::{ResponseJson, RouterError},
     ClientType,
@@ -10,24 +9,9 @@ use crate::{
 use serde_derive::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
-enum Instruction {
-    #[serde(alias = "mission", rename = "mission")]
-    Mission(Vec<MavLinkCommands>),
-
-    #[serde(alias = "clear_mission", rename = "clear_mission")]
-    ClearMission,
-
-    #[serde(alias = "land", rename = "land")]
-    Land,
-
-    #[serde(alias = "navigate", rename = "navigate")]
-    Navigate { lat: i32, long: i32, altitude: i16 },
-}
-
-#[derive(Deserialize, Serialize)]
 struct Command {
     division_name: String,
-    command: Instruction,
+    instruction: Instruction,
 }
 
 pub(crate) fn send_command(
@@ -65,7 +49,8 @@ pub(crate) fn send_command(
 fn stringify_command(command: &Command) -> String {
     serde_json::json!({
         "route": drone_routes::COMMAND,
-        "command": &command
+        "division_name": &command.division_name,
+        "instruction": &command.instruction
     })
     .to_string()
 }
