@@ -1,15 +1,23 @@
+use crate::alligator::swarm::clients::uavs::Drone;
+use crate::alligator::swarm::nodes::Session;
 use crate::alligator::swarm::Message;
 use crate::alligator::swarm::Swarm;
+use crate::alligator::utils::unhash_string;
 use actix::dev::SendError;
 use actix::prelude::{Context, Handler, Message as ActixMessage};
-use std::ops::Deref;
+use std::collections::HashMap;
 
 type Response = Result<String, SendError<Message>>;
-type DivisionListResponse = Result<Vec<String>, SendError<Message>>;
+type DivisionNamesResponse = Result<Vec<String>, SendError<Message>>;
+type DivisionsResponse = Result<HashMap<String, HashMap<Session, Drone>>, SendError<Message>>;
 
 #[derive(ActixMessage, Debug)]
-#[rtype(DivisionListResponse)]
+#[rtype(DivisionsResponse)]
 pub(crate) struct GetAllDivisions;
+
+#[derive(ActixMessage, Debug)]
+#[rtype(DivisionNamesResponse)]
+pub(crate) struct GetAllDivisionNames;
 
 #[derive(ActixMessage, Debug)]
 #[rtype(Response)]
@@ -39,15 +47,36 @@ impl Handler<DeleteDivision> for Swarm {
     }
 }
 
-impl<'a> Handler<GetAllDivisions> for Swarm {
-    type Result = DivisionListResponse;
+impl<'a> Handler<GetAllDivisionNames> for Swarm {
+    type Result = DivisionNamesResponse;
 
-    fn handle(&mut self, _: GetAllDivisions, _: &mut Context<Self>) -> Self::Result {
+    fn handle(&mut self, _: GetAllDivisionNames, _: &mut Context<Self>) -> Self::Result {
         Ok(self
             .network
             .division_names()
             .into_iter()
-            .map(|e| e.deref().to_string())
+            .map(|e| unhash_string(e))
+            .collect())
+    }
+}
+
+impl<'a> Handler<GetAllDivisions> for Swarm {
+    type Result = DivisionsResponse;
+
+    fn handle(&mut self, _: GetAllDivisions, _: &mut Context<Self>) -> Self::Result {
+        Ok(self
+            .network
+            .drones_node()
+            .iter()
+            .map(|division| {
+                let division_name = unhash_string(division.0);
+                let mut map = HashMap::new();
+                for drone in (*division.1).drones().iter() {
+                    map.insert(*drone.0, (drone.1).1.clone());
+                }
+
+                (division_name, map)
+            })
             .collect())
     }
 }

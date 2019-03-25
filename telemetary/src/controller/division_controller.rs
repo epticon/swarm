@@ -1,5 +1,7 @@
 use crate::{
-    alligator::swarm::{CreateDivision, DeleteDivision, GetAllDivisions, SendCommandToPilots},
+    alligator::swarm::{
+        CreateDivision, DeleteDivision, GetAllDivisionNames, GetAllDivisions, SendCommandToPilots,
+    },
     constants::pilot_routes,
     controller::{serialize_value, AlligatorSocketContext},
     router::Body,
@@ -94,6 +96,33 @@ pub(crate) fn create(
     }
 }
 
+pub(crate) fn get_all_division_names(
+    _: Body,
+    client: &ClientType,
+    ctx: &mut AlligatorSocketContext,
+) -> Result<ResponseJson, RouterError> {
+    match client {
+        ClientType::Pilot { .. } => {
+            let divisions = ctx
+                .state()
+                .address
+                .send(GetAllDivisionNames)
+                .map_err(|s| s.into())
+                .and_then(|res| res.map_err(|_| RouterError::ClientDown(client.clone())))
+                .wait()?;
+
+            // Send only to the client who initiated the request
+            // to get all division names
+            Ok(ResponseJson::new(&stringify_response(
+                &divisions,
+                pilot_routes::DIVISION_NAMES,
+            )))
+        }
+
+        _ => Err(RouterError::UnsupportedClient(client.to_owned())),
+    }
+}
+
 pub(crate) fn get_all(
     _: Body,
     client: &ClientType,
@@ -110,7 +139,7 @@ pub(crate) fn get_all(
                 .wait()?;
 
             // Send only to the client who initiated the request
-            // to get all division names
+            // to get all division names.
             Ok(ResponseJson::new(&stringify_response(
                 &divisions,
                 pilot_routes::DIVISIONS,

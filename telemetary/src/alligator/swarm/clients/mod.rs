@@ -5,11 +5,7 @@ pub(crate) mod uavs;
 pub(crate) mod users;
 
 pub(crate) trait ClientTrait<'a, Address = &'a Recipient<Message>> {
-    fn address(&'a self) -> Address {
-        unimplemented!()
-    }
+    fn address(&'a self) -> Address;
 
-    fn hash(&'a self) -> &'a str {
-        unimplemented!()
-    }
+    fn hash(&'a self) -> &'a str;
 }

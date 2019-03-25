@@ -37,7 +37,7 @@ impl Default for RootNode {
 }
 
 impl RootNode {
-    pub fn _drones_node(&self) -> &HashMap<String, DroneNode> {
+    pub fn drones_node(&self) -> &HashMap<String, DroneNode> {
         &self.drones
     }
 

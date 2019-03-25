@@ -17,6 +17,7 @@ pub(crate) fn get_routes() -> Router<ResponseJson, ClientType, Response> {
         .add_route(TELEMETARY, telemetary_controller::send_telemetary)
         // Divisions
         .add_route(DIVISIONS, division_controller::get_all)
+        .add_route(DIVISION_NAMES, division_controller::get_all_division_names)
         .add_route(CREATE_DIVISION, division_controller::create)
         .add_route(DELETE_DIVISION, division_controller::delete);
 

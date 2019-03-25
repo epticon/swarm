@@ -62,3 +62,30 @@ impl Default for DroneNode {
         }
     }
 }
+
+// impl Serialize for DroneNode {
+//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+//     where
+//         S: Serializer,
+//     {
+//         let mut map = serializer.serialize_map(Some(self.inner.iter().len()))?;
+//         for (session, (hash, drone)) in self.inner.iter() {
+//             map.serialize_entry(session, &(hash, drone))?;
+//         }
+//         map.end()
+//     }
+// }
+
+// impl Clone for DroneNode {
+//     fn clone(&self) -> Self {
+//         let mut map = MultiMap::new();
+//         for m in self.inner.iter() {
+//             map.insert(*m.0, (m.1).0.to_string(), (m.1).1.clone());
+//         }
+
+//         Self {
+//             inner: map,
+//             range: self.range.clone(),
+//         }
+//     }
+// }

@@ -1,5 +1,6 @@
 use crate::alligator::swarm::uavs::{ClientTrait, DeviceTrait, Message};
 use actix::Recipient;
+use serde::{ser::SerializeStruct, Serialize, Serializer};
 
 #[derive(Clone)]
 pub(crate) struct Drone {
@@ -37,5 +38,17 @@ impl<'a> ClientTrait<'a> for Drone {
 
     fn hash(&'a self) -> &'a str {
         &self.hash
+    }
+}
+
+impl Serialize for Drone {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut drone = serializer.serialize_struct("Drone", 2)?;
+        drone.serialize_field("hash", &self.hash)?;
+        drone.serialize_field("owner_hash", &self.owner_hash)?;
+        drone.end()
     }
 }
