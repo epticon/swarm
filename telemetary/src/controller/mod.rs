@@ -1,6 +1,7 @@
 pub(crate) mod command_controller;
-pub(crate) mod telemetary_controller;
 pub(crate) mod division_controller;
+mod json_definitions;
+pub(crate) mod telemetary_controller;
 
 use crate::{
     alligator::server::AlligatorServer, alligator::server::AlligatorServerState,

@@ -1,8 +1,12 @@
+use crate::mavlink::mavlink_code::*;
 use serde::{Serialize, Serializer};
 use serde_derive::Deserialize;
 
 #[derive(Deserialize)]
 pub enum MavLinkCommands {
+    // Custom
+    Clear,
+
     // Navigation commands
     Waypoint {
         delay: String,
@@ -125,6 +129,8 @@ impl Serialize for MavLinkCommands {
         S: Serializer,
     {
         match *self {
+            MavLinkCommands::Clear => serializer.serialize_str(CUSTOM_MAV_CMD_CLEAR),
+
             MavLinkCommands::Waypoint {
                 ref delay,
                 ref yaw_angle,
@@ -132,8 +138,8 @@ impl Serialize for MavLinkCommands {
                 ref long,
                 ref alt,
             } => serializer.serialize_str(&format!(
-                "MAV_CMD_NAV_WAYPOINT	{}	0	0	{}	{}	{}	{}",
-                delay, yaw_angle, lat, long, alt
+                "{}\t{}\t0\t0\t{}\t{}\t{}\t{}",
+                MAV_CMD_NAV_WAYPOINT, delay, yaw_angle, lat, long, alt
             )),
 
             MavLinkCommands::SplineWaypoint {
@@ -142,8 +148,8 @@ impl Serialize for MavLinkCommands {
                 ref long,
                 ref alt,
             } => serializer.serialize_str(&format!(
-                "MAV_CMD_NAV_SPLINE_WAYPOINT	{}	0	0	0	{}	{}	{}",
-                delay, lat, long, alt
+                "{}\t{}\t0\t0\t0\t{}\t{}\t{}",
+                MAV_CMD_NAV_SPLINE_WAYPOINT, delay, lat, long, alt
             )),
 
             MavLinkCommands::LoiterUnlim {
@@ -151,8 +157,8 @@ impl Serialize for MavLinkCommands {
                 ref long,
                 ref alt,
             } => serializer.serialize_str(&format!(
-                "MAV_CMD_NAV_LOITER_UNLIM	0	0	0	0	{}	{}	{}",
-                lat, long, alt
+                "{}\t0\t0\t0\t0\t{}\t{}\t{}",
+                MAV_CMD_NAV_LOITER_UNLIM, lat, long, alt
             )),
 
             MavLinkCommands::LoiterTurns {
@@ -162,8 +168,8 @@ impl Serialize for MavLinkCommands {
                 ref long,
                 ref alt,
             } => serializer.serialize_str(&format!(
-                "MAV_CMD_NAV_LOITER_TURNS	{}	0	{}	0	{}	{}	{}",
-                turn, dir, lat, long, alt
+                "{}\t{}\t0\t{}\t0\t{}\t{}\t{}",
+                MAV_CMD_NAV_LOITER_TURNS, turn, dir, lat, long, alt
             )),
 
             MavLinkCommands::LoiterTime {
@@ -172,26 +178,30 @@ impl Serialize for MavLinkCommands {
                 ref long,
                 ref alt,
             } => serializer.serialize_str(&format!(
-                "MAV_CMD_NAV_LOITER_TIME	{}	0	0	0	{}	{}	{}",
-                times, lat, long, alt
+                "{}\t{}\t0\t0\t0\t{}\t{}\t{}",
+                MAV_CMD_NAV_LOITER_TIME, times, lat, long, alt
             )),
 
-            MavLinkCommands::ReturnToLaunch => {
-                serializer.serialize_str("MAV_CMD_NAV_RETURN_TO_LAUNCH	0	0	0	0	0	0	0")
-            }
+            MavLinkCommands::ReturnToLaunch => serializer.serialize_str(&format!(
+                "{}\t0\t0\t0\t0\t0\t0\t0",
+                MAV_CMD_NAV_RETURN_TO_LAUNCH
+            )),
 
-            MavLinkCommands::Land { ref lat, ref long } => {
-                serializer.serialize_str(&format!("MAV_CMD_NAV_LAND	0	0	0	0	{}	{}	0", lat, long))
-            }
+            MavLinkCommands::Land { ref lat, ref long } => serializer.serialize_str(&format!(
+                "{}\t0\t0\t0\t0\t{}\t{}\t0",
+                MAV_CMD_NAV_LAND, lat, long
+            )),
 
-            MavLinkCommands::Takeoff { ref alt } => {
-                serializer.serialize_str(&format!("MAV_CMD_NAV_TAKEOFF	0	0	0	0	0	0	{}", alt))
-            }
+            MavLinkCommands::Takeoff { ref alt } => serializer.serialize_str(&format!(
+                "{}\t0\t0\t0\t0\t0\t0\t{}",
+                MAV_CMD_NAV_TAKEOFF, alt
+            )),
 
             // Condition commands
-            MavLinkCommands::ConditionDelay { ref time } => {
-                serializer.serialize_str(&format!("MAV_CMD_CONDITION_DELAY	{}	0	0	0	0	0	0", time))
-            }
+            MavLinkCommands::ConditionDelay { ref time } => serializer.serialize_str(&format!(
+                "{}\t{}\t0\t0\t0\t0\t0\t0",
+                MAV_CMD_CONDITION_DELAY, time
+            )),
 
             MavLinkCommands::ConditionYaw {
                 ref angle,
@@ -199,22 +209,27 @@ impl Serialize for MavLinkCommands {
                 ref direction,
                 ref absolute_angle,
             } => serializer.serialize_str(&format!(
-                "MAV_CMD_CONDITION_YAW	{}	{}	{}	{}	0	0	0",
-                angle, speed, direction, absolute_angle
+                "{}\t{}\t{}\t{}\t{}\t0\t0\t0",
+                MAV_CMD_CONDITION_YAW, angle, speed, direction, absolute_angle
             )),
 
-            MavLinkCommands::ConditionDistance { ref distance } => serializer.serialize_str(
-                &format!("MAV_CMD_CONDITION_DISTANCE	{}	0	0	0	0	0	0", distance),
-            ),
+            MavLinkCommands::ConditionDistance { ref distance } => {
+                serializer.serialize_str(&format!(
+                    "{}\t{}\t0\t0\t0\t0\t0\t0",
+                    MAV_CMD_CONDITION_DISTANCE, distance
+                ))
+            }
 
             // DO Commands
-            MavLinkCommands::DoJump { ref wp, ref repeat } => {
-                serializer.serialize_str(&format!("MAV_CMD_DO_JUMP	{}	{}	0	0	0	0	0", wp, repeat))
-            }
+            MavLinkCommands::DoJump { ref wp, ref repeat } => serializer.serialize_str(&format!(
+                "{}\t{}\t{}\t0\t0\t0\t0\t0",
+                MAV_CMD_DO_JUMP, wp, repeat
+            )),
 
-            MavLinkCommands::DoSetMode { ref mode } => {
-                serializer.serialize_str(&format!("MAV_CMD_DO_SET_MODE	{}	0	0	0	0	0	0", mode))
-            }
+            MavLinkCommands::DoSetMode { ref mode } => serializer.serialize_str(&format!(
+                "{}\t{}\t0\t0\t0\t0\t0\t0",
+                MAV_CMD_DO_SET_MODE, mode
+            )),
 
             MavLinkCommands::DoChangeSpeed {
                 ref speed_type,
@@ -222,8 +237,8 @@ impl Serialize for MavLinkCommands {
                 ref throttle,
                 ref absolute_or_relative,
             } => serializer.serialize_str(&format!(
-                "MAV_CMD_DO_CHANGE_SPEED	{}	{}	{}	{}	0	0	0",
-                speed_type, speed, throttle, absolute_or_relative
+                "{}\t{}\t{}\t{}\t{}\t0\t0\t0",
+                MAV_CMD_DO_CHANGE_SPEED, speed_type, speed, throttle, absolute_or_relative
             )),
 
             MavLinkCommands::DoSetHome {
@@ -232,16 +247,16 @@ impl Serialize for MavLinkCommands {
                 ref long,
                 ref alt,
             } => serializer.serialize_str(&format!(
-                "MAV_CMD_DO_SET_HOME	{}	0	0	0	{}	{}	{}",
-                current, lat, long, alt
+                "{}\t{}\t0\t0\t0\t{}\t{}\t{}",
+                MAV_CMD_DO_SET_HOME, current, lat, long, alt
             )),
 
             MavLinkCommands::DoSetServo {
                 ref ser_no,
                 ref pwm,
             } => serializer.serialize_str(&format!(
-                "MAV_CMD_DO_SET_SERVO	{}	{}	0	0	0	0	0",
-                ser_no, pwm
+                "{}\t{}\t{}\t0\t0\t0\t0\t0",
+                MAV_CMD_DO_SET_SERVO, ser_no, pwm
             )),
 
             MavLinkCommands::DoRepeatServo {
@@ -250,8 +265,8 @@ impl Serialize for MavLinkCommands {
                 ref repeat,
                 ref delay,
             } => serializer.serialize_str(&format!(
-                "MAV_CMD_DO_REPEAT_SERVO	{}	{}	{}	{}	0	0	0",
-                ser_no, pwm, repeat, delay
+                "{}\t{}\t{}\t{}\t{}\t0\t0\t0",
+                MAV_CMD_DO_REPEAT_SERVO, ser_no, pwm, repeat, delay
             )),
 
             MavLinkCommands::DoDigicamControl {
@@ -259,8 +274,8 @@ impl Serialize for MavLinkCommands {
                 ref focus_lock,
                 ref shutter_cmd,
             } => serializer.serialize_str(&format!(
-                "MAV_CMD_DO_DIGICAM_CONTROL	{}	0	0	{}	{}	0	0",
-                on_or_off, focus_lock, shutter_cmd
+                "{}\t{}\t0\t0\t{}\t{}\t0\t0",
+                MAV_CMD_DO_DIGICAM_CONTROL, on_or_off, focus_lock, shutter_cmd
             )),
 
             MavLinkCommands::DoDigicamConfigure {
@@ -270,16 +285,16 @@ impl Serialize for MavLinkCommands {
                 ref iso,
                 ref engine_cut_off,
             } => serializer.serialize_str(&format!(
-                "MAV_CMD_DO_DIGICAM_CONFIGURE	{}	{}	{}	{}	0	0	{}",
-                mode, shutter_speed, aperture, iso, engine_cut_off
+                "{}\t{}\t{}\t{}\t{}\t0\t0\t{}",
+                MAV_CMD_DO_DIGICAM_CONFIGURE, mode, shutter_speed, aperture, iso, engine_cut_off
             )),
 
             MavLinkCommands::DoSetRelay {
                 ref relay_no,
                 ref state,
             } => serializer.serialize_str(&format!(
-                "MAV_CMD_DO_SET_RELAY	{}	{}	0	0	0	0	0",
-                relay_no, state
+                "{}\t{}\t{}\t0\t0\t0\t0\t0",
+                MAV_CMD_DO_SET_RELAY, relay_no, state
             )),
 
             MavLinkCommands::DoRepeatRelay {
@@ -287,21 +302,24 @@ impl Serialize for MavLinkCommands {
                 ref repeat,
                 ref delay,
             } => serializer.serialize_str(&format!(
-                "MAV_CMD_DO_REPEAT_RELAY	{}	{}	{}	0	0	0	0",
-                relay_no, repeat, delay
+                "{}\t{}\t{}\t{}\t0\t0\t0\t0",
+                MAV_CMD_DO_REPEAT_RELAY, relay_no, repeat, delay
             )),
 
-            MavLinkCommands::DoSetCamTriggDist { ref distance } => serializer.serialize_str(
-                &format!("MAV_CMD_DO_SET_CAM_TRIGG_DIST	{}	0	0	0	0	0	0", distance),
-            ),
+            MavLinkCommands::DoSetCamTriggDist { ref distance } => {
+                serializer.serialize_str(&format!(
+                    "{}\t{}\t0\t0\t0\t0\t0\t0",
+                    MAV_CMD_DO_SET_CAM_TRIGG_DIST, distance
+                ))
+            }
 
             MavLinkCommands::DoMountControl {
                 ref pitch,
                 ref roll,
                 ref yaw,
             } => serializer.serialize_str(&format!(
-                "MAV_CMD_DO_MOUNT_CONTROL	{}	{}	{}	0	0	0	0",
-                pitch, roll, yaw
+                "{}\t{}\t{}\t{}\t0\t0\t0\t0",
+                MAV_CMD_DO_MOUNT_CONTROL, pitch, roll, yaw
             )),
         }
     }
