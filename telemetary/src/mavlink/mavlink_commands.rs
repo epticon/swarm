@@ -129,7 +129,9 @@ impl Serialize for MavLinkCommands {
         S: Serializer,
     {
         match *self {
-            MavLinkCommands::Clear => serializer.serialize_str(CUSTOM_MAV_CMD_CLEAR),
+            MavLinkCommands::Clear => {
+                serializer.serialize_str(&format!("{}", CUSTOM_MAV_CMD_CLEAR))
+            }
 
             MavLinkCommands::Waypoint {
                 ref delay,
