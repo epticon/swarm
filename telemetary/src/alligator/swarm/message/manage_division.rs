@@ -1,5 +1,5 @@
 use crate::alligator::swarm::clients::uavs::Drone;
-use crate::alligator::swarm::nodes::Session;
+use crate::alligator::swarm::nodes::{DroneNode, Session};
 use crate::alligator::swarm::Message;
 use crate::alligator::swarm::Swarm;
 use crate::alligator::utils::unhash_string;
@@ -26,6 +26,14 @@ pub(crate) struct CreateDivision(pub String);
 #[derive(ActixMessage, Debug)]
 #[rtype(Response)]
 pub(crate) struct DeleteDivision(pub String);
+
+#[derive(ActixMessage, Debug)]
+#[rtype(Response)]
+pub(crate) struct ChangeDivision {
+    pub drone_session: usize,
+    pub from: String,
+    pub to: String,
+}
 
 impl Handler<CreateDivision> for Swarm {
     type Result = Response;
@@ -57,6 +65,37 @@ impl<'a> Handler<GetAllDivisionNames> for Swarm {
             .into_iter()
             .map(|e| unhash_string(e))
             .collect())
+    }
+}
+
+impl<'a> Handler<ChangeDivision> for Swarm {
+    type Result = Response;
+
+    fn handle(&mut self, cmd: ChangeDivision, _: &mut Context<Self>) -> Self::Result {
+        let node = self.network.drones_node_as_mut();
+        let division = node
+            .get_mut(&cmd.from)
+            .ok_or_else(|| SendError::Closed(Message(String::new())))?;
+
+        let drone = division
+            .remove(cmd.drone_session)
+            .ok_or_else(|| SendError::Closed(Message(String::new())))?;
+
+        let session = cmd.drone_session;
+        node.entry(cmd.to.to_string())
+            .and_modify(|e| {
+                e.insert(drone.clone(), Some(session));
+            })
+            .or_insert_with(|| {
+                let mut new_node = DroneNode::new();
+                new_node.insert(drone, Some(session));
+                new_node
+            });
+
+        Ok(format!(
+            "Successfully moved drone from division: {} to {}",
+            cmd.from, cmd.to
+        ))
     }
 }
 
