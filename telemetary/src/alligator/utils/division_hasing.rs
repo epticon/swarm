@@ -11,6 +11,7 @@ pub(crate) fn hash_string(string: &str) -> String {
     // let mut hasher = DefaultHasher::new();
     // string.hash(&mut hasher);
     // hasher.finish().to_string()
+    // Todo: There are many places you are supposed to hash that you aren't currently, hence do justice to them
 }
 
 /// Unhash a given string.

@@ -19,7 +19,8 @@ pub(crate) fn get_routes() -> Router<ResponseJson, ClientType, Response> {
         .add_route(DIVISIONS, division_controller::get_all)
         .add_route(DIVISION_NAMES, division_controller::get_all_division_names)
         .add_route(CREATE_DIVISION, division_controller::create)
-        .add_route(DELETE_DIVISION, division_controller::delete);
+        .add_route(DELETE_DIVISION, division_controller::delete)
+        .add_route(CHANGE_DIVISION, division_controller::change_division);
 
     router
 }

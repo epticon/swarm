@@ -40,6 +40,10 @@ impl RootNode {
         &self.drones
     }
 
+    pub fn drones_node_as_mut(&mut self) -> &mut HashMap<String, DroneNode> {
+        &mut self.drones
+    }
+
     pub fn pilots_node(&self) -> &PilotNode {
         &self.pilots
     }

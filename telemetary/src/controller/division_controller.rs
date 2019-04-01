@@ -1,6 +1,7 @@
 use crate::{
     alligator::swarm::{
-        CreateDivision, DeleteDivision, GetAllDivisionNames, GetAllDivisions, SendCommandToPilots,
+        ChangeDivision, CreateDivision, DeleteDivision, GetAllDivisionNames, GetAllDivisions,
+        SendCommandToPilots,
     },
     constants::pilot_routes,
     controller::{serialize_value, AlligatorSocketContext},
@@ -17,6 +18,13 @@ struct CreateDivisionRq(String);
 
 #[derive(Deserialize, Serialize)]
 struct DeleteDivisionRq(String);
+
+#[derive(Deserialize, Serialize)]
+struct ChangeDivisionRq {
+    to: String,
+    from: String,
+    drone_session: usize,
+}
 
 pub(crate) fn delete(
     body: Body,
@@ -143,6 +151,49 @@ pub(crate) fn get_all(
             Ok(ResponseJson::new(&stringify_response(
                 &divisions,
                 pilot_routes::DIVISIONS,
+            )))
+        }
+
+        _ => Err(RouterError::UnsupportedClient(client.to_owned())),
+    }
+}
+
+pub(crate) fn change_division(
+    body: Body,
+    client: &ClientType,
+    ctx: &mut AlligatorSocketContext,
+) -> Result<ResponseJson, RouterError> {
+    let body = body
+        .content()
+        .ok_or_else(RouterError::body_missing)?
+        .clone();
+
+    let info = &serialize_value::<ChangeDivisionRq>(body)?;
+
+    match client {
+        ClientType::Pilot { .. } => {
+            let msg = ctx
+                .state()
+                .address
+                .send(ChangeDivision {
+                    to: info.to.to_string(),
+                    from: info.from.to_string(),
+                    drone_session: info.drone_session,
+                })
+                .map_err(|s| s.into())
+                .and_then(|res| {
+                    res.map_err(|e| {
+                        println!("{}", e);
+                        RouterError::ClientDown(client.clone())
+                    })
+                })
+                .wait()?;
+
+            // Send only to the client who initiated the request
+            // to get all division names.
+            Ok(ResponseJson::new(&stringify_response(
+                &msg,
+                pilot_routes::CHANGE_DIVISION,
             )))
         }
 
