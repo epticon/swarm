@@ -4,7 +4,6 @@ use crate::alligator::{
     utils::hash_string,
 };
 use multi_map::MultiMap;
-use std::cell::RefCell;
 use std::collections::{hash_map::Entry, HashMap};
 
 mod drone;
@@ -101,21 +100,29 @@ impl RootNode {
     }
 
     pub fn delete_division(&mut self, name: &str) {
-        let rc_self = RefCell::new(self);
-        let sf1 = rc_self.borrow();
-        let mut sf2 = rc_self.borrow_mut();
-
-        if let Some(node) = sf1.drones.get(name) {
+        let mut drones = vec![];
+        if let Some(node) = self.drones.get(name) {
             for drone in node.drones().iter() {
-                // Move all drones in division that is about to be deleted division into
-                // the default divison (General) before deleting.
-                sf2.get_default_division()
-                    .insert((drone.1).1.to_owned(), Some(*drone.0));
+                drones.push((*drone.0, (drone.1).0.to_string(), (drone.1).1.clone())); // (session, hash, drone)
+            }
+        }
 
-                sf2.drones.get_mut(name).and_then(|e: &mut DroneNode| {
-                    e.remove(*drone.0);
-                    Some(())
-                });
+        for drone in drones {
+            // Insert into the default division.
+            self.get_default_division().insert(drone.2, Some(drone.0));
+
+            // Delete all moved drones by session id from previous division.
+            if let Some(a) = self.drones.get_mut(name) {
+                a.remove(drone.0);
+            }
+        }
+
+        if let Some(node) = self.drones.get(name) {
+            // Only delete iff the division is empty (this is essential for cases
+            // were another pilot would have added a drone to this same division
+            // in few seconds of last check).
+            if node.len() == 0 {
+                self.drones.remove(name);
             }
         }
     }

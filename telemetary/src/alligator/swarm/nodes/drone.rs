@@ -24,6 +24,10 @@ impl DroneNode {
         }
     }
 
+    pub fn len(&self) -> usize {
+        self.inner.iter().len()
+    }
+
     pub fn insert(&mut self, drone: Drone, session_id: Option<usize>) -> Session {
         let session_id = match session_id {
             None => self.range.gen::<Session>(),
