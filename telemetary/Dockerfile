@@ -26,6 +26,6 @@ FROM rust:1.33
 
 # copy the build artifact from the build stage
 COPY --from=build /telemetary/target/release/telemetary .
-
+COPY .env ./.env
 # set the startup command to run your binary
 CMD ["./telemetary"]
