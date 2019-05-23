@@ -1,9 +1,8 @@
 version: "3"
 
 services:
-  nginx:
+  webserver:
     image: nginx:alpine
-    container_name: webserver
     restart: unless-stopped
     tty: true
     networks:
@@ -12,10 +11,10 @@ services:
       - 80:80
       - 443:443
     links:
-      - telemetary:telemetary
+      - swarm:swarm
       - videostream:videostream
     depends_on:
-      - telemetary
+      - swarm
       - videostream
     command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'''
     volumes:
@@ -23,7 +22,7 @@ services:
       - ./nginx/data/certbot/conf:/etc/letsencrypt
       - ./nginx/data/certbot/www:/var/www/certbot
 
-  telemetary:
+  swarm:
     build: ./telemetary
     restart: unless-stopped
     tty: true
@@ -31,6 +30,8 @@ services:
       - db
     volumes:
       - ./telemetary:/bin
+    networks:
+      - alligator-network
     ports:
       - "8080:8080"
 
