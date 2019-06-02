@@ -115,7 +115,7 @@ pub(crate) fn get_all_division_names(
                 .state()
                 .address
                 .send(GetAllDivisionNames)
-                .map_err(|s| s.into())
+                .map_err(std::convert::Into::into)
                 .and_then(|res| res.map_err(|_| RouterError::ClientDown(client.clone())))
                 .wait()?;
 
@@ -142,7 +142,7 @@ pub(crate) fn get_all(
                 .state()
                 .address
                 .send(GetAllDivisions)
-                .map_err(|s| s.into())
+                .map_err(std::convert::Into::into)
                 .and_then(|res| res.map_err(|_| RouterError::ClientDown(client.clone())))
                 .wait()?;
 
@@ -180,7 +180,7 @@ pub(crate) fn change_division(
                     from: info.from.to_string(),
                     drone_session: info.drone_session,
                 })
-                .map_err(|s| s.into())
+                .map_err(std::convert::Into::into)
                 .and_then(|res| {
                     res.map_err(|e| {
                         println!("{}", e);
