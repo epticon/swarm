@@ -1,5 +1,5 @@
 use crate::alligator::{
-    constants::DEFAULT_DRONE_CHANNEL,
+    constants::swarm_info::DEFAULT_DRONE_CHANNEL,
     swarm::{uavs::Drone, users::Pilot},
     utils::hash_string,
 };

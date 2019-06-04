@@ -1,8 +1,6 @@
+use crate::alligator::constants::swarm_info::{HEARTBEAT_INTERVAL, MAX_CLIENT_TIMEOUT};
+use crate::alligator::swarm::{Connect, Disconnect, Message, Swarm};
 use crate::alligator::utils;
-use crate::alligator::{
-    constants::{HEARTBEAT_INTERVAL, MAX_CLIENT_TIMEOUT},
-    swarm::{Connect, Disconnect, Message, Swarm},
-};
 use crate::router::Body;
 use crate::router::{RequestJson, ResponseJson, Router, RouterError};
 use actix::{

@@ -1,6 +1,7 @@
 pub(crate) use self::clients::*;
 pub(crate) use self::message::*;
 use self::nodes::RootNode;
+use crate::alligator::constants::notification_types::{DRONES_DOWN, NOTIFICATION_ROUTE};
 use actix::prelude::SendError;
 use actix::prelude::{Actor, Context, Message as ActixMessage};
 use serde::Serialize;
@@ -34,9 +35,8 @@ impl Swarm {
     {
         let json = Rc::new(to_string(&message).unwrap()); // this is safe
 
+        let mut closed_drones = vec![];
         if let Some(node) = self.network.division_as_mut(&division_name) {
-            let mut closed_drones = vec![];
-
             for drone in node.drones().iter() {
                 if *drone.0 != skip_id {
                     let response = (drone.1).1.address().do_send(Message(json.to_string()));
@@ -55,6 +55,10 @@ impl Swarm {
                     session_id
                 );
             }
+        }
+
+        if !closed_drones.is_empty() {
+            let _ = self.send_message_to_pilots(&drones_down_message(&closed_drones));
         }
 
         Ok(())
@@ -88,6 +92,19 @@ impl Swarm {
 
         Ok(())
     }
+}
+
+// Todo: Improve upon this by making reusable for all notifications in the swarm
+// i.e. users shoulc import this message template from maybe an utilities folder.
+fn drones_down_message(drones_session: &[usize]) -> String {
+    serde_json::json!({
+        "route": NOTIFICATION_ROUTE,
+        "data":{
+            "type": DRONES_DOWN,
+            "drones_session": &drones_session
+        }
+    })
+    .to_string()
 }
 
 impl Default for Swarm {

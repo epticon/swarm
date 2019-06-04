@@ -1,5 +1,7 @@
 use crate::alligator::{
-    constants::{CLIENT_TYPE_HEADER_KEY, DEFAULT_DRONE_CHANNEL, FAKE_PILOT_CLIENT_HASH},
+    constants::swarm_info::{
+        CLIENT_TYPE_HEADER_KEY, DEFAULT_DRONE_CHANNEL, FAKE_PILOT_CLIENT_HASH,
+    },
     server::{AlligatorServer, ClientType},
 };
 use actix::Actor;
