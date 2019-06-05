@@ -1,11 +1,11 @@
 pub(crate) use self::clients::*;
 pub(crate) use self::message::*;
 use self::nodes::RootNode;
-use crate::alligator::constants::notification_types::{DRONES_DOWN, NOTIFICATION_ROUTE};
+use crate::alligator::utils::notifications::{notify_message, NotificationTypes};
 use actix::prelude::SendError;
 use actix::prelude::{Actor, Context, Message as ActixMessage};
 use serde::Serialize;
-use serde_json::to_string;
+use serde_json::{json, to_string};
 use std::rc::Rc;
 
 mod clients;
@@ -58,7 +58,13 @@ impl Swarm {
         }
 
         if !closed_drones.is_empty() {
-            let _ = self.send_message_to_pilots(&drones_down_message(&closed_drones));
+            let _ = self.send_message_to_pilots(&notify_message(
+                json!({
+                    "division_name": division_name,
+                    "drones_session": &closed_drones
+                }),
+                NotificationTypes::DronesDown,
+            ));
         }
 
         Ok(())
@@ -92,19 +98,6 @@ impl Swarm {
 
         Ok(())
     }
-}
-
-// Todo: Improve upon this by making reusable for all notifications in the swarm
-// i.e. users shoulc import this message template from maybe an utilities folder.
-fn drones_down_message(drones_session: &[usize]) -> String {
-    serde_json::json!({
-        "route": NOTIFICATION_ROUTE,
-        "data":{
-            "type": DRONES_DOWN,
-            "drones_session": &drones_session
-        }
-    })
-    .to_string()
 }
 
 impl Default for Swarm {

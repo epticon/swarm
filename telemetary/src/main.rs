@@ -7,8 +7,8 @@ use dotenv::var as env;
 mod alligator;
 mod constants;
 mod controller;
-mod router;
 mod mavlink;
+mod router;
 
 fn swarm_index_route(req: &HttpRequest<AlligatorServerState>) -> Result<HttpResponse, Error> {
     ws::start(req, AlligatorServer::default())

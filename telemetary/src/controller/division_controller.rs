@@ -10,8 +10,11 @@ use crate::{
     ClientType,
 };
 use futures::future::Future;
+use serde::de::Deserializer;
 use serde::Serialize;
+use serde::{de, Deserialize};
 use serde_derive::{Deserialize, Serialize};
+use std::str::FromStr;
 
 #[derive(Deserialize, Serialize)]
 struct CreateDivisionRq(String);
@@ -23,6 +26,7 @@ struct DeleteDivisionRq(String);
 struct ChangeDivisionRq {
     to: String,
     from: String,
+    #[serde(deserialize_with = "usize_from_str")]
     drone_session: usize,
 }
 
@@ -207,4 +211,12 @@ fn stringify_response<T: Serialize>(command: &T, route: &str) -> String {
         "response": &command
     })
     .to_string()
+}
+
+fn usize_from_str<'de, D>(deserializer: D) -> Result<usize, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    usize::from_str(&s).map_err(de::Error::custom)
 }

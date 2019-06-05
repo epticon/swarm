@@ -1,5 +1,7 @@
+use crate::alligator::utils::notifications::{notify_message, NotificationTypes};
 use crate::alligator::{self, server::ClientType, swarm::Swarm};
 use actix::prelude::{Context, Handler, Message as ActixMessage};
+use serde_json::json;
 
 #[derive(ActixMessage, Debug)]
 pub(crate) struct Disconnect {
@@ -18,6 +20,13 @@ impl Handler<Disconnect> for Swarm {
         match msg.client {
             ClientType::Drone { division_name, .. } => {
                 self.network.remove_drone(&division_name, msg.session_id);
+                let _ = self.send_message_to_pilots(&notify_message(
+                    json!({
+                        "division_name": &division_name,
+                        "drones_session": [msg.session_id]
+                    }),
+                    NotificationTypes::DronesDown,
+                ));
             }
 
             ClientType::Pilot { .. } => {
