@@ -1,4 +1,4 @@
-# Cepticon Swarm
+# Epticon Swarm
 
 Comprises of:
 
