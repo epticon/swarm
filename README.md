@@ -1,4 +1,4 @@
-# Alligator Swarm Remote Server
+# Cepticon Swarm
 
 Comprises of:
 
